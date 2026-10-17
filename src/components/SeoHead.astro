@@ -5,11 +5,25 @@ interface Props {
   type?: 'website' | 'article';
   author?: string;
   publishedDate?: Date;
+  image?: string;
+  imageAlt?: string;
 }
 
-const { title, description, type = 'website', author, publishedDate } = Astro.props;
+const { title, description, type = 'website', author, publishedDate, image, imageAlt } =
+  Astro.props;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
 const publishedTime = publishedDate?.toISOString();
+
+/**
+ * Imagen para las tarjetas de compartir (Open Graph y Twitter/X).
+ * Ni Facebook ni X aceptan SVG, y una imagen pequeña se ve borrosa en la
+ * tarjeta, así que si no hay imagen usable se cae al banner institucional,
+ * que sí está en un formato y un tamaño que las plataformas saben pintar.
+ */
+const IMAGEN_RESPALDO = '/images/banner.webp';
+const imagen = image && !/\.svg(\?|$)/i.test(image) ? image : IMAGEN_RESPALDO;
+const ogImage = new URL(imagen, Astro.site ?? Astro.url).href;
+const ogImageAlt = imageAlt ?? title;
 ---
 
 <link rel="canonical" href={canonicalUrl} />
@@ -19,6 +33,19 @@ const publishedTime = publishedDate?.toISOString();
 <meta property="og:url" content={canonicalUrl} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
+<meta property="og:site_name" content="Blog de la Corporación Cultura y Desarrollo" />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:alt" content={ogImageAlt} />
+
+<!-- Twitter/X: sin estas etiquetas el enlace se publica como texto plano. -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content={ogImageAlt} />
+
 {author && <meta name="author" content={author} />}
-{type === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
+{type === 'article' && publishedTime && (
+  <meta property="article:published_time" content={publishedTime} />
+)}
 {type === 'article' && author && <meta property="article:author" content={author} />}

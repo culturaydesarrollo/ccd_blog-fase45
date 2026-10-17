@@ -70,6 +70,19 @@ body {
 
 .skip-link:focus { top: 1rem; }
 
+/* Texto accesible pero sin espacio visual: lo usan los encabezados que la
+   imagen del banner ya comunica, para que la jerarquía siga existiendo
+   (H1 único por página) sin alterar el diseño. */
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .eyebrow {
   color: var(--color-secondary);
   font-size: 0.75rem;

@@ -74,14 +74,39 @@ const regularPosts = sortedPosts.filter((post) => post.id !== latestPost?.id);
 const bloquesDestacados = enBloques(featuredPosts);
 const bloquesAnteriores = enBloques(regularPosts);
 const pageCount = Math.ceil(sortedPosts.length / HOME_PAGE_SIZE);
+
+// Schema del sitio: va calculado aquí, no en el marcado, porque es donde
+// Astro.site está disponible. Es lo que le permite a Google mostrar
+// enlaces de sitio y entender que el blog tiene buscador.
+const siteUrl = new URL('/', Astro.site ?? Astro.url).href;
+const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Blog de la Corporación Cultura y Desarrollo',
+    description: 'Espacio de difusión, análisis y gestión cultural comunitaria.',
+    url: siteUrl,
+    inLanguage: 'es-CO',
+    potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+            '@type': 'EntryPoint',
+            urlTemplate: new URL('/archivo/?q={search_term_string}', Astro.site ?? Astro.url).href,
+        },
+        'query-input': 'required name=search_term_string',
+    },
+};
 ---
 
 <Layout
     title="Blog | Cultura y Desarrollo"
     description="Espacio de difusión, análisis y gestión cultural comunitaria."
 >
+    <Fragment slot="head">
+        <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+    </Fragment>
     <div class="blog-container">
         <header class="blog-header">
+            <h1 class="visually-hidden">Blog de la Corporación Cultura y Desarrollo</h1>
             <img
                 src="/images/banner.webp"
                 alt="Blog de Cultura y Desarrollo"

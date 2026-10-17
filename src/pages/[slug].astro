@@ -97,12 +97,16 @@ const relatedAuthorImage = (post: (typeof allPosts)[number]) =>
 const readingMinutes = Math.max(1, Math.ceil((entry.body?.split(/\s+/).filter(Boolean).length ?? 0) / 200));
 
 const articleUrl = new URL(`/${entry.id}/`, Astro.site ?? Astro.url).href;
+// Misma imagen que pinta la página: sirve para el Article schema y para las
+// tarjetas de compartir, así los tres sitios dicen lo mismo.
+const postImage = getPostImage(entry);
 const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: entry.data.title,
     description: entry.data.description,
     url: articleUrl,
+    image: new URL(postImage ?? '/images/banner.webp', Astro.site ?? Astro.url).href,
     datePublished: entry.data.pubDate.toISOString(),
     author: {
         '@type': 'Person',
@@ -139,6 +143,8 @@ const breadcrumbSchema = {
     type="article"
     author={entry.data.author}
     publishedDate={entry.data.pubDate}
+    image={postImage}
+    imageAlt={entry.data.title}
 >
 <Fragment slot="head">
     <script type="application/ld+json" set:html={JSON.stringify(articleSchema)}></script>

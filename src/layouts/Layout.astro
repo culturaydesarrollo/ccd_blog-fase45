@@ -10,9 +10,11 @@ interface Props {
 	type?: 'website' | 'article';
 	author?: string;
 	publishedDate?: Date;
+	image?: string;
+	imageAlt?: string;
 }
 
-const { title, description, type = 'website', author, publishedDate } = Astro.props;
+const { title, description, type = 'website', author, publishedDate, image, imageAlt } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -27,6 +29,8 @@ const { title, description, type = 'website', author, publishedDate } = Astro.pr
 			type={type}
 			author={author}
 			publishedDate={publishedDate}
+			image={image}
+			imageAlt={imageAlt}
 		/>
 		<link rel="manifest" href="/manifest.webmanifest" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
