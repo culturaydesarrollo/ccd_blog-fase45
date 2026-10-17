@@ -1,0 +1,12 @@
+# Reglas de Cloudflare Pages.
+#
+# Pages sirve las URLs "limpias": un archivo foo.html se publica y luego se
+# redirige a /foo, en cadena. Para el sitio normal eso es lo que se quiere.
+#
+# Pero Google Search Console exige que el archivo de verificacion responda
+# 200 EN LA URL EXACTA que el panel indica, con el .html incluido. Una
+# cadena de 308 no sirve: el verificador no encuentra el token.
+#
+# Por eso aqui se reescribe esa ruta concreta (status 200 = servir el
+# contenido sin cambiar la URL) y solo esa. Nada mas se toca.
+/googleaf6b69fe8ec517ad.html /googleaf6b69fe8ec517ad 200
