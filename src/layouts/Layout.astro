@@ -32,9 +32,14 @@ const { title, description, type = 'website', author, publishedDate, image, imag
 			image={image}
 			imageAlt={imageAlt}
 		/>
-		<!-- Verificación de Google Search Console: no se quita, aunque la
-		     verificación ya esté confirmada, o se pierde. -->
-		<meta name="google-site-verification" content="17GfBB6sy7B_3PzGN5E_cDCNievyFX0ndyazf8X0QU0" />
+		<!--
+		  La verificación de Search Console se hace con el archivo
+		  public/googleaf6b69fe8ec517ad.html, no con etiqueta meta.
+		  Estuvo aquí un tiempo una etiqueta con el token del apex
+		  (17GfBB6sy7B…), que es de otra propiedad y nunca pudo
+		  verificar esta: solo estorba, por eso se quitó.
+		  El archivo no se borra: Google lo vuelve a comprobar.
+		-->
 		<link rel="manifest" href="/manifest.webmanifest" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="icon" href="/favicon.ico" sizes="48x48" />
