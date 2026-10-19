@@ -1,4 +1,6 @@
 ---
+import { imageDimensions } from '../lib/imageDimensions';
+
 interface Props {
   title: string;
   image?: string;
@@ -9,6 +11,7 @@ interface Props {
 const { title, image, video, variant = 'older' } = Astro.props;
 const imageClass = variant === 'latest' ? 'latest-card-image' : 'older-post-image';
 const videoClass = variant === 'latest' ? 'latest-card-video' : 'older-post-video';
+const dims = image ? imageDimensions(image) : undefined;
 ---
 
 {video ? (
@@ -24,5 +27,5 @@ const videoClass = variant === 'latest' ? 'latest-card-video' : 'older-post-vide
     aria-label={`Video de ${title}`}
   ></video>
 ) : image ? (
-  <img class={imageClass} src={image} alt={`Imagen destacada de ${title}`} loading="lazy" decoding="async" />
+  <img class={imageClass} src={image} alt={`Imagen destacada de ${title}`} width={dims?.width} height={dims?.height} loading="lazy" decoding="async" />
 ) : null}

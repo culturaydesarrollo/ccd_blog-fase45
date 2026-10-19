@@ -12,6 +12,7 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 import { resolveAuthor, resolveAuthorImage } from '../lib/author';
 import { getPostImage } from '../lib/postImage';
+import { imageDimensions } from '../lib/imageDimensions';
 
 // 1. Generar las rutas estáticas para cada artículo
 export async function getStaticPaths() {
@@ -717,7 +718,7 @@ const breadcrumbSchema = {
 
                 {entry.data.image && entry.data.showImageInArticle && !hasInlineFeaturedImage && (
                     <figure class="featured-figure">
-                        <img src={entry.data.image} alt={entry.data.title} class="featured-image" />
+                        <img src={entry.data.image} alt={entry.data.title} class="featured-image" width={imageDimensions(entry.data.image)?.width} height={imageDimensions(entry.data.image)?.height} />
                         {featuredImageCaption && <figcaption>{featuredImageCaption}</figcaption>}
                     </figure>
                 )}
@@ -878,7 +879,7 @@ const breadcrumbSchema = {
                                                     ))}
                                                 </span>
                                                 {relatedImage(post) && (
-                                                    <img class="older-post-image" src={relatedImage(post)} alt={`Imagen destacada de ${post.data.title}`} loading="lazy" decoding="async" />
+                                                    <img class="older-post-image" src={relatedImage(post)} alt={`Imagen destacada de ${post.data.title}`} width={imageDimensions(relatedImage(post))?.width} height={imageDimensions(relatedImage(post))?.height} loading="lazy" decoding="async" />
                                                 )}
                                                 <p class="post-description">{post.data.description}</p>
                                                 <a class="read-more" href={`/${post.id}/`}>Leer artículo →</a>

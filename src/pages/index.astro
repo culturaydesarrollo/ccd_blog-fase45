@@ -112,8 +112,8 @@ const websiteSchema = {
                 src="/images/banner.webp"
                 alt="Blog de Cultura y Desarrollo"
                 class="home-banner"
-                width="2200"
-                height="1080"
+                width="1600"
+                height="533"
                 fetchpriority="high"
                 decoding="async"
             />
@@ -121,6 +121,7 @@ const websiteSchema = {
 
         <div class="blog-search-wrap" aria-label="Buscar artículos del blog">
             <form id="blog-search-form" class="blog-search-controls" role="search" aria-label="Buscar artículos" data-index-url={`${import.meta.env.BASE_URL}search-index.json`} data-base-url={import.meta.env.BASE_URL}>
+                <label class="visually-hidden" for="blog-search-input">Buscar artículos</label>
                 <input
                     id="blog-search-input"
                     class="blog-search-input"

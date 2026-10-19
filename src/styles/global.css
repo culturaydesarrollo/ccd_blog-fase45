@@ -522,10 +522,6 @@ a:hover {
   outline: 2px solid color-mix(in srgb, var(--color-secondary) 25%, transparent);
 }
 
-.blog-filter-label {
-  display: none;
-}
-
 .blog-search-count {
   color: var(--color-muted);
   font-size: 0.8rem;
