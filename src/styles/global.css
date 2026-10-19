@@ -1,5 +1,23 @@
 /* src/styles/global.css */
 
+/* ——— Dirección A · Edición cultural: Source Serif 4 auto-alojada ——— */
+@font-face {
+  font-family: 'Source Serif 4';
+  src: url('/fonts/source-serif-4-latin.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  src: url('/fonts/source-serif-4-latin-ext.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   /* Paleta coordinada con el marrón del logo institucional */
   --color-primary: #24130f;
@@ -13,7 +31,9 @@
   --color-on-primary: #fffdfb;
   --color-surface-strong: #ffffff;
 
-  --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --ancho-lectura: 68ch;
   --shadow-soft: 0 18px 40px rgba(36, 19, 15, 0.08);
 }
 
@@ -306,7 +326,7 @@ a:hover {
 .featured-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .featured-card {
@@ -998,4 +1018,117 @@ a:hover {
     scroll-behavior: auto;
     transition: none;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Dirección A · Edición cultural — rediseño aprobado (19/10/2026)
+   Serif editorial para títulos y lectura, medida de 68ch, «Artículos
+   anteriores» en filas de 96px y arreglos de accesibilidad
+   (foco del carrusel, objetivos táctiles ≥44px, zoom iOS en el buscador).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Títulos: serif editorial (h1–h4); metadatos e UI siguen en sans */
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.16;
+}
+.post-title-link,
+.featured-card h3 a {
+  font-weight: 600;
+}
+
+/* Cuerpo de lectura: serif a 68ch; UI y código, sans/mono */
+.article-content {
+  font-family: var(--font-serif);
+  max-width: var(--ancho-lectura);
+}
+.article-content :is(code, pre, samp, kbd) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.article-content :is(button, input, select, textarea),
+.article-disclaimer,
+.article-post-share {
+  font-family: var(--font-sans);
+}
+.post-description,
+.latest-card-content p {
+  font-family: var(--font-serif);
+}
+
+/* Portada: más aire entre tarjetas de destacados */
+.featured-section .posts-list {
+  gap: 1.5rem;
+}
+
+/* Artículos anteriores: filas horizontales con miniatura de 96px */
+.older-posts-section:not(.featured-section) .posts-list {
+  grid-template-columns: 1fr;
+}
+.older-posts-section:not(.featured-section) .post-item {
+  padding: 1.25rem 1.5rem;
+}
+.older-posts-section:not(.featured-section) .post-item-with-image .older-post-content {
+  align-items: start;
+  column-gap: 1.25rem;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+}
+.older-posts-section:not(.featured-section) .post-item-with-image .older-post-content > * {
+  grid-column: 2;
+}
+.older-posts-section:not(.featured-section) .post-item-with-image .older-post-content > :is(.older-post-image, .older-post-video) {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  margin-bottom: 0;
+  max-height: 96px;
+  object-fit: contain;
+  width: 96px;
+}
+
+/* Accesibilidad: foco visible del carrusel (la base mantiene outline:none
+   solo para foco con ratón; el foco de teclado pinta su outline aquí) */
+.carousel:focus:not(:focus-visible) {
+  outline: none;
+}
+.carousel:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 3px;
+}
+
+/* Accesibilidad: objetivos táctiles y zoom iOS en el buscador */
+.blog-search-input,
+.blog-author-filter {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.blog-navbar .navbar-container .menu-toggle {
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+}
+.author-bio-trigger {
+  align-items: center;
+  display: inline-flex;
+  min-height: 44px;
+  padding: 0 0.5rem;
+}
+.carousel-dots {
+  gap: 0.9rem;
+}
+.carousel-dot {
+  position: relative;
+}
+.carousel-dot::after {
+  content: '';
+  height: 44px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+}
+.carousel-btn {
+  height: 2.75rem;
+  width: 2.75rem;
 }

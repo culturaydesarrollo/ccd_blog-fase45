@@ -69,8 +69,9 @@ const authorList = [...new Set(sortedPosts.map((post) => post.data.author))].sor
 const latestPost = sortedPosts[0] ?? null;
 // Destacados: todos los marcados como featured (aunque estén más allá de la primera página)
 const featuredPosts = sortedPosts.filter((post) => post.data.featured && post.id !== latestPost?.id);
-// Anteriores: lista completa de todo lo anterior al artículo reciente (los destacados se repiten)
-const regularPosts = sortedPosts.filter((post) => post.id !== latestPost?.id);
+// Anteriores: todo lo anterior al artículo reciente, SIN repetir los destacados
+// (los destacados ya tienen su propio bloque arriba — Dirección A, 19/10/2026)
+const regularPosts = sortedPosts.filter((post) => post.id !== latestPost?.id && !post.data.featured);
 const bloquesDestacados = enBloques(featuredPosts);
 const bloquesAnteriores = enBloques(regularPosts);
 const pageCount = Math.ceil(sortedPosts.length / HOME_PAGE_SIZE);
