@@ -469,7 +469,7 @@ a:hover {
 
 .featured-card h3 a {
   color: var(--color-primary);
-  font-size: 1.1rem;
+  font-size: clamp(1.4rem, 3vw, 1.7rem);
   font-weight: 700;
   text-decoration: none;
 }
