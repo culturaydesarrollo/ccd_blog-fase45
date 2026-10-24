@@ -1,0 +1,426 @@
+---
+// FourierMap - pieza editorial de «Acerca de»: el contorno de Colombia trazado
+// por los círculos giratorios de una serie de Fourier (estilo Epicycle Studio).
+// Datos: src/data/colombia-outline.ts (Natural Earth 10m, dominio público).
+// El error en vivo usa la identidad de Parseval sobre los coeficientes ya
+// calculados: costo O(1) por actualización del deslizador.
+---
+
+<figure class="fourier-map">
+  <div class="fourier-lienzo">
+    <canvas
+      role="img"
+      aria-label="Animación: los círculos giratorios de una serie de Fourier van trazando el contorno de Colombia."
+    >
+      Esta pieza dibuja el contorno de Colombia con una serie de Fourier y
+      requiere JavaScript para animarse.
+    </canvas>
+    <noscript>
+      <p class="fourier-noscript">
+        Esta pieza es interactiva: activa JavaScript para ver el trazado.
+      </p>
+    </noscript>
+  </div>
+
+  <div class="fourier-controles">
+    <label class="fourier-control" for="fourier-terminos">
+      <span class="fourier-nombre">Términos de la serie</span>
+      <input
+        id="fourier-terminos"
+        type="range"
+        min="1"
+        max="350"
+        step="1"
+        value="90"
+      />
+      <output class="fourier-k" for="fourier-terminos">90</output>
+    </label>
+    <p class="fourier-error">
+      Error de aproximación:
+      <strong class="fourier-error-valor">…</strong>
+    </p>
+  </div>
+
+  <figcaption>
+    Serie de Fourier sobre el contorno continental de Colombia (Natural
+    Earth, dominio público). El error se mide contra la curva base por la
+    identidad de Parseval.
+  </figcaption>
+</figure>
+
+<style>
+  .fourier-map {
+    margin: 1.25rem auto 0;
+    max-width: 420px;
+  }
+
+  .fourier-lienzo {
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .fourier-lienzo canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 0.72;
+  }
+
+  .fourier-noscript {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  .fourier-controles {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    gap: 0.5rem 1.25rem;
+    margin-top: 0.75rem;
+  }
+
+  .fourier-control {
+    align-items: center;
+    display: flex;
+    flex: 1 1 250px;
+    gap: 0.6rem;
+  }
+
+  .fourier-nombre {
+    color: var(--color-text);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .fourier-control input[type='range'] {
+    accent-color: var(--color-secondary);
+    flex: 1;
+    height: 1.5rem;
+    min-width: 110px;
+  }
+
+  .fourier-k {
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    min-width: 3ch;
+    text-align: right;
+  }
+
+  .fourier-error {
+    color: var(--color-muted);
+    margin: 0;
+  }
+
+  .fourier-error-valor {
+    color: var(--color-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fourier-map figcaption {
+    color: var(--color-muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-top: 0.6rem;
+  }
+</style>
+
+<script>
+  import { COLOMBIA, COLOMBIA_N } from '../data/colombia-outline';
+
+  const CICLO_MS = 15000; // una vuelta completa del trazado (sereno, no apurado)
+  const PAUSA_MS = 1100; // asomo al país terminado antes de empezar de nuevo
+  const MAX_CIRCULOS = 48; // círculos visibles (los de mayor energía); la cadena suma todos
+
+  const raiz = document.querySelector<HTMLElement>('.fourier-map');
+  const lienzo = raiz?.querySelector<HTMLCanvasElement>('canvas');
+  const slider = raiz?.querySelector<HTMLInputElement>('input[type="range"]');
+  const salidaK = raiz?.querySelector<HTMLElement>('.fourier-k');
+  const salidaErr = raiz?.querySelector<HTMLElement>('.fourier-error-valor');
+  const ctx = lienzo?.getContext('2d');
+
+  if (raiz && lienzo && slider && salidaK && salidaErr && ctx) {
+    const N = COLOMBIA_N;
+    const KMAX = N / 2;
+    const estatico = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // --- Colores del sistema (viven en :root / [data-theme='dark']) ---
+    function leerColores() {
+      const cs = getComputedStyle(document.documentElement);
+      return {
+        tinta: cs.getPropertyValue('--color-text').trim() || '#24130f',
+        terracota: cs.getPropertyValue('--color-secondary').trim() || '#9a5f3f',
+        neblina: cs.getPropertyValue('--color-muted').trim() || '#667085',
+      };
+    }
+    let col = leerColores();
+    new MutationObserver(() => {
+      col = leerColores();
+      if (estatico && listo) pintarEstatico();
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    // --- Geometría del lienzo ---
+    let w = 0, h = 0, esc = 1, cx = 0, cy = 0;
+    let guia: Path2D | null = null;
+
+    function medir() {
+      const dpr = window.devicePixelRatio || 1;
+      const r = lienzo.getBoundingClientRect();
+      w = r.width; h = r.height;
+      lienzo.width = Math.round(w * dpr);
+      lienzo.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // La forma mide 1.449 x 2.0 normalizada; margen del 12% para los epiciclos
+      esc = Math.min((w * 0.76) / 1.449, (h * 0.76) / 2.0);
+      cx = w / 2; cy = h / 2;
+      guia = guiaPath();
+    }
+
+    function guiaPath(): Path2D {
+      const p = new Path2D();
+      for (let j = 0; j <= N; j++) {
+        const i = (j % N) * 2;
+        const x = cx + COLOMBIA[i] * esc;
+        const y = cy - COLOMBIA[i + 1] * esc; // y+ = norte en datos, y+ = abajo en canvas
+        if (j === 0) p.moveTo(x, y); else p.lineTo(x, y);
+      }
+      return p;
+    }
+
+    // --- Serie de Fourier (una sola vez; O(N^2) ≈ 10^6 ops) ---
+    const cre = new Float64Array(N + 1);
+    const cim = new Float64Array(N + 1);
+    let listo = false;
+
+    function calcularDft() {
+      if (listo) return;
+      for (let k = -KMAX; k <= KMAX; k++) {
+        let sr = 0, si = 0, wr = 1, wi = 0;
+        const paso = (-2 * Math.PI * k) / N;
+        const cr = Math.cos(paso), ci = Math.sin(paso);
+        for (let j = 0; j < N; j++) {
+          const xr = COLOMBIA[j * 2], xi = COLOMBIA[j * 2 + 1];
+          sr += xr * wr - xi * wi;
+          si += xr * wi + xi * wr;
+          const nr = wr * cr - wi * ci;
+          wi = wr * ci + wi * cr;
+          wr = nr;
+        }
+        cre[k + KMAX] = sr / N;
+        cim[k + KMAX] = si / N;
+      }
+      // Error por Parseval: RMS(z_K - z)^2 = suma de |c_k|^2 con |k| > K.
+      // Prefijos y sufijos hacen que consultarlo cueste O(1) por K.
+      let acc = 0;
+      for (let i = 0; i <= N; i++) { prefijo[i] = acc; acc += cre[i] ** 2 + cim[i] ** 2; }
+      acc = 0;
+      for (let i = N; i >= 0; i--) { sufijo[i] = acc; acc += cre[i] ** 2 + cim[i] ** 2; }
+      listo = true;
+    }
+
+    const prefijo = new Float64Array(N + 2);
+    const sufijo = new Float64Array(N + 2);
+
+    function errorDe(K: number): number {
+      // |k| > K  ⇔  indices [0, KMAX-K-1] ∪ [KMAX+K+1, N]
+      return Math.sqrt(prefijo[KMAX - K] + sufijo[KMAX + K]) * 100;
+    }
+
+    // --- Términos activos: indices con |k| <= K, ordenados por energía ---
+    let K = Number(slider.value);
+    let idxs: number[] = [];
+
+    function ordenar() {
+      idxs = [];
+      for (let k = -K; k <= K; k++) idxs.push(k + KMAX);
+      idxs.sort((a, b) => (cre[b] ** 2 + cim[b] ** 2) - (cre[a] ** 2 + cim[a] ** 2));
+      salidaK.textContent = String(K);
+      salidaErr.textContent = listo ? formatear(errorDe(K)) : '…';
+    }
+
+    function formatear(v: number): string {
+      // Espacio fino antes del % (tipografía española)
+      return v.toFixed(2).replace('.', ',') + '\u00a0%';
+    }
+
+    // --- Estado del trazo ---
+    let fase = 0; // 0..N (parametro t de la serie)
+    let trazando = !estatico;
+    let esperaHasta = 0;
+    const rastro = new Float64Array(N * 2);
+    let rastroLen = 0;
+
+    function limpiarRastro() { rastroLen = 0; }
+
+    function cadena(t: number): [number, number] {
+      // Recorre los términos activos y devuelve la punta; dibuja círculos y cadena
+      let x = cx, y = cy;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      const circ = new Path2D();
+      let nCirc = 0;
+      for (let s = 0; s < idxs.length; s++) {
+        const i = idxs[s];
+        const k = i - KMAX;
+        const a = (2 * Math.PI * k * t) / N;
+        const c = Math.cos(a), sn = Math.sin(a);
+        const vx = cre[i] * c - cim[i] * sn;
+        const vy = cre[i] * sn + cim[i] * c;
+        const radio = Math.hypot(cre[i], cim[i]) * esc;
+        if (nCirc < MAX_CIRCULOS && radio > 0.6) {
+          circ.moveTo(x + radio, y);
+          circ.arc(x, y, radio, 0, Math.PI * 2);
+          nCirc++;
+        }
+        x += vx * esc;
+        y -= vy * esc;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = col.terracota;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.globalAlpha = 0.22;
+      ctx.stroke(circ);
+      ctx.globalAlpha = 1;
+      return [x, y];
+    }
+
+    function pintarBase() {
+      ctx.clearRect(0, 0, w, h);
+      // Contorno real de referencia (Neblina tenue): contra él se lee el error
+      if (guia) {
+        ctx.save();
+        ctx.strokeStyle = col.neblina;
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1;
+        ctx.stroke(guia);
+        ctx.restore();
+      }
+    }
+
+    function pintarRastroYD(puntaX: number, puntaY: number) {
+      if (rastroLen > 2) {
+        ctx.beginPath();
+        ctx.moveTo(rastro[0], rastro[1]);
+        for (let i = 1; i < rastroLen; i++) ctx.lineTo(rastro[i * 2], rastro[i * 2 + 1]);
+        ctx.strokeStyle = col.tinta;
+        ctx.lineWidth = 1.6;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(puntaX, puntaY, 3, 0, Math.PI * 2);
+      ctx.fillStyle = col.terracota;
+      ctx.fill();
+    }
+
+    function trazoCompleto(): Path2D {
+      const p = new Path2D();
+      for (let j = 0; j <= N; j++) {
+        const t = (2 * Math.PI * j) / N;
+        let x = 0, y = 0;
+        for (let s = 0; s < idxs.length; s++) {
+          const i = idxs[s];
+          const k = i - KMAX;
+          const a = t * k;
+          const c = Math.cos(a), sn = Math.sin(a);
+          x += cre[i] * c - cim[i] * sn;
+          y += cre[i] * sn + cim[i] * c;
+        }
+        const px = cx + x * esc, py = cy - y * esc;
+        if (j === 0) p.moveTo(px, py); else p.lineTo(px, py);
+      }
+      return p;
+    }
+
+    function pintarEstatico() {
+      // Reduced-motion: cadena en reposo + el trazo entero, sin bucle
+      pintarBase();
+      const [px, py] = cadena(0);
+      ctx.strokeStyle = col.tinta;
+      ctx.lineWidth = 1.6;
+      ctx.lineJoin = 'round';
+      ctx.stroke(trazoCompleto());
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = col.terracota;
+      ctx.fill();
+    }
+
+    // --- Bucle animado ---
+    let raf = 0;
+    let ultimo = 0;
+
+    function cuadro(ts: number) {
+      const dt = Math.min(ts - (ultimo || ts), 50); // pestaña en segundo plano no salta
+      ultimo = ts;
+
+      if (trazando) {
+        fase += (N * dt) / CICLO_MS;
+        if (fase >= N) { fase = N; trazando = false; esperaHasta = ts + PAUSA_MS; }
+      } else if (ts >= esperaHasta) {
+        fase = 0; trazando = true; limpiarRastro();
+      }
+
+      pintarBase();
+      const [px, py] = cadena(fase);
+      if (trazando) {
+        rastro[rastroLen * 2] = px;
+        rastro[rastroLen * 2 + 1] = py;
+        if (rastroLen < N) rastroLen++;
+      }
+      pintarRastroYD(px, py);
+      raf = requestAnimationFrame(cuadro);
+    }
+
+    function arrancar() {
+      cancelAnimationFrame(raf);
+      ultimo = 0;
+      raf = requestAnimationFrame(cuadro);
+    }
+
+    // --- Controles ---
+    slider.addEventListener('input', () => {
+      K = Number(slider.value);
+      ordenar();
+      limpiarRastro();
+      if (estatico && listo) pintarEstatico();
+    });
+
+    new ResizeObserver(() => {
+      medir();
+      limpiarRastro();
+      if (estatico && listo) pintarEstatico();
+    }).observe(lienzo);
+
+    // DFT diferido hasta que la pieza se vea (no penaliza la carga de la página)
+    function preparar() {
+      calcularDft();
+      ordenar();
+      medir();
+      if (estatico) pintarEstatico(); else arrancar();
+    }
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entradas) => {
+        if (entradas[0].isIntersecting) {
+          if (!listo) preparar();
+          else if (!estatico) arrancar();
+        } else if (!estatico) {
+          cancelAnimationFrame(raf); // fuera de vista: sin costo
+        }
+      }, { rootMargin: '120px' });
+      io.observe(lienzo);
+    } else {
+      preparar();
+    }
+  }
+</script>

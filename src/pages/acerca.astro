@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import FourierMap from '../components/FourierMap.astro';
 
 const title = 'Acerca de | Blog Cultura y Desarrollo';
 const description =
@@ -102,6 +103,24 @@ const paths = [
         </a>
         <a href="/autores/">Autores del blog →</a>
       </p>
+    </section>
+
+    <section class="about-section">
+      <h2>¡Mayor compromiso, mejor país!</h2>
+      <p>
+        Esta pieza nació de una metáfora que nos describe. Toda curva
+        cerrada puede reconstruirse con una suma de círculos que giran —una
+        serie de Fourier—, término a término. Con un solo término la forma
+        se queda en un óvalo: la intención, por sí sola, no dibuja un país.
+      </p>
+      <p>
+        Cada círculo nuevo corrige el trazo un poco, y al final la suma se
+        vuelve casi exacta. Creemos que el territorio funciona igual: cada
+        compromiso —una lectura, una gestión, una conversación, una
+        alianza— corrige el contorno de lo que podemos ser. Ninguno basta
+        solo. Juntos, el país deja de ser aproximación.
+      </p>
+      <FourierMap />
     </section>
 
     <section class="about-section">
