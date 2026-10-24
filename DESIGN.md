@@ -47,35 +47,12 @@ typography:
     fontSize: "1rem"
   micro:
     fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.62rem"
-  micro-alta:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.65rem"
-  chip-mini:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.68rem"
-  chip:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.7rem"
-  compacto:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.8rem"
-  nav:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.82rem"
+    fontSize: "0.75rem"
+    letterSpacing: "0.02em"
   meta:
     fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "0.85rem"
-  nota:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.88rem"
   ui:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.9rem"
-  ui-alta:
-    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
-    fontSize: "0.92rem"
-  intermedio:
     fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif"
     fontSize: "0.95rem"
   frase:
@@ -206,7 +183,7 @@ Paleta de papeles y tintas: cálida, apagada, sin colores primarios puros.
 - **Papel Crema** (#fffdfb): fondo general.
 - **Arena Suave** (#f8f1ec): fondo de tarjetas, paneles, callouts, inputs de carrusel.
 - **Borde Cobre Claro** (#e4d7cf): todos los bordes de 1px.
-- **Neblina** (#667085): metadatos y texto secundario — el único gris, levemente frío, reservado a lo que debe callarse.
+- **Neblina** (#667085): metadatos y texto secundario - el único gris, levemente frío, reservado a lo que debe callarse. Es también `--color-muted` en CSS (modo claro); en modo oscuro muta a #d8c4bb cálido. **Única fuente de gris en el sistema**: placeholders de formularios (`::placeholder`) y meta de listados migrados a este token el 24/10/2026 (antes existían #98a2b3 y #718096 como grises sueltos; eliminados).
 - **Sobre-Tinta** (#fffdfb): texto sobre primarios sólidos.
 
 ### Acentos funcionales (callouts MDX)
@@ -217,7 +194,6 @@ Paleta de papeles y tintas: cálida, apagada, sin colores primarios puros.
 - **Verde Éxito** (#147a3c): confirmaciones de formulario y estados de comentarios.
 - **Rojo Error** (#b42318): mensajes de error y validación.
 - **Oro Métrica** (#f4b740): estrellas de valoración en artículos.
-- **Gris Discreto** (#98a2b3) y **Gris Frío** (#718096): placeholders y texto auxiliar de formularios/filtros (regla future: migrar a Neblina).
 - **Tinta de Video** (#000000): fondo de letterboxing detrás de vídeos (`background: #000` en `video`) — negro puro permitido solo aquí.
 - Las veladuras (overlays `rgba(...)`) deben derivar siempre de estos tokens, nunca introducir nuevos tintes.
 
@@ -249,8 +225,8 @@ Inversiones planas del mismo carácter: Tinta Café → durazno claro (#f1c8ae),
 **La Regla de la Medida (68ch).** El texto de lectura nunca excede `--ancho-lectura: 68ch`. Es la diferencia entre un artículo y un muro de texto.
 **La Regla Serif/Sans.** Serif = contenido (títulos, lectura). Sans = infraestructura (UI, metadatos, formularios). Nunca al revés. Controles dentro del artículo (`button/input/select/textarea`) vuelven a sans explícitamente.
 
-### Inventario real de tamaños (23/10/2026, post-critique)
-El frontmatter tipo el estado real, no el ideal: `micro` (0.62/0.65/0.68), `chip` (0.7), `compacto`/`nav`/`meta`/`nota`/`ui`/`ui-alta`/`intermedio` (0.8–0.95), `frase`/`lede`/`lede-alta` (1.05–1.15) y titulares intermedios en serif (1.25–2.3 + clamp 2.1–2.7). **Pendiente en la próxima pasada de pulido**: consolidar los 7 tamaños de texto auxiliar a 2–3 pasos reales (propuesta: 0.85 meta / 0.95 ui / 0.7 micro) y actualizar el frontmatter y la CSS juntos.
+### Rampa auxiliar consolidada (24/10/2026)
+Los tamaños de texto auxiliar se consolidaron a **3 pasos reales**: `micro` (0.75rem — eyebrows, chips, fechas, flechas), `meta` (0.85rem — breadcrumbs, TOC, meta de tarjetas, labels de formulario) y `ui` (0.95rem — párrafos de UI, footer, comentarios). La rampa absorbió 12 tamaños casi indistinguibles (0.62–0.92) con 48 reemplazos verificados por script; `0.75rem` es también el piso de legibilidad (11.2px ≥ 11px). Por encima: `frase`/`lede`/`lede-alta` (1.05–1.15) y titulares serif (1.25–2.3 + clamp 2.1–2.7), sin cambios.
 
 ## Layout
 

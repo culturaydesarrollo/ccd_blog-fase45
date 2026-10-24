@@ -31,9 +31,7 @@
       "exito-verde": { "role": "functional", "displayName": "Verde Éxito", "canonical": "#147a3c" },
       "error-rojo": { "role": "functional", "displayName": "Rojo Error", "canonical": "#b42318" },
       "estrella-oro": { "role": "functional", "displayName": "Oro Métrica", "canonical": "#f4b740" },
-      "gris-discreto": { "role": "neutral", "displayName": "Gris Discreto", "canonical": "#98a2b3" },
-      "gris-frio": { "role": "neutral", "displayName": "Gris Frío", "canonical": "#718096" },
-      "tinta-video": { "role": "functional", "displayName": "Tinta de Video", "canonical": "#000000" }
+            "tinta-video": { "role": "functional", "displayName": "Tinta de Video", "canonical": "#000000" }
     },
     "typographyMeta": {
       "display": { "displayName": "Display", "purpose": "h1 de página (.page-heading h1)." },
