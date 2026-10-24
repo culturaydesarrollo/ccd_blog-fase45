@@ -288,6 +288,8 @@ a:hover {
 
 .home-banner {
   display: block;
+  /* brightness() animado solo al cambiar de tema (no durante scroll).
+     Si el toggle se siente pesado en móvil medio, quitar la transición. */
   filter: brightness(1);
   width: 100%;
   height: auto;
@@ -930,7 +932,7 @@ a:hover {
   cursor: pointer;
   height: 10px;
   padding: 0;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s;
   width: 10px;
 }
 .carousel-dot[aria-current="true"] {
@@ -976,7 +978,8 @@ a:hover {
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  transition: height 0.3s ease;
+  /* Sin transition de height: fitHeight() corre durante el swipe y una
+     transición de altura mantendría layout+repaint en cada frame. */
 }
 .carousel::-webkit-scrollbar {
   display: none;
@@ -1010,7 +1013,6 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   .carousel {
     scroll-behavior: auto;
-    transition: none;
   }
 }
 

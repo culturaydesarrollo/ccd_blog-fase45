@@ -319,7 +319,7 @@ const breadcrumbSchema = {
             font-size: 0.85rem;
             padding: 0.3rem 0.7rem;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s ease, color 0.2s ease;
         }
         .tag-item:hover,
         .tag-item:focus-visible {
@@ -473,7 +473,7 @@ const breadcrumbSchema = {
             border: 1px solid var(--color-border);
             border-radius: 6px;
             text-decoration: none;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
             display: flex;
             flex-direction: column;
         }
@@ -515,7 +515,7 @@ const breadcrumbSchema = {
             background: #fbf4ef;
             border-radius: 6px;
             text-decoration: none;
-            transition: all 0.2s;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
         }
         .rating-wrap {
             border-top: 1px solid var(--color-border);
@@ -606,10 +606,6 @@ const breadcrumbSchema = {
         }
         .author-trigger img {
             display: block;
-            transition: transform 0.2s ease;
-        }
-        .author-trigger:hover img, .author-trigger:focus-visible img {
-            transform: none;
         }
         .author-modal-card {
             border: 0;

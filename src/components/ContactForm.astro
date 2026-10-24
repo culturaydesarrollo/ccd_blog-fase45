@@ -302,6 +302,13 @@ const formAction = apiBase ? `${apiBase}/api/contact` : `https://formspree.io/f/
     transform: translateY(0);
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .contact-success-toast {
+      transform: none;
+      transition: none;
+    }
+  }
+
   /* Sin esta regla, display:flex anula el atributo hidden */
   .contact-success-toast[hidden] {
     display: none;
