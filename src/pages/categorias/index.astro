@@ -25,7 +25,7 @@ const categories = [...new Map(
 
         <ul style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; list-style: none; padding: 0;">
             {categories.map(([categorySlug, categoryName]) => (
-                <li style="background: var(--color-bg-alt); border-left: 4px solid var(--color-secondary); border-radius: 8px; padding: 1.25rem;">
+                <li style="background: var(--color-bg-alt); border-left: 2px solid var(--color-secondary); border-radius: 8px; padding: 1.25rem;">
                     <a href={`/categorias/${categorySlug}/`} style="color: var(--color-primary); font-size: 1.1rem; font-weight: 700; text-decoration: none;">
                         {categoryName}
                     </a>

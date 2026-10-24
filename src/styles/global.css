@@ -129,7 +129,7 @@ body {
 .toc { position: fixed; right: max(1rem, calc((100vw - 850px) / 2)); top: 84px; z-index: 900; }
 .toc-toggle { align-items: center; background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: 999px; box-shadow: var(--shadow-soft); color: var(--color-text); cursor: pointer; display: inline-flex; font: 700 0.75rem var(--font-sans); gap: 0.35rem; padding: 0.55rem 0.75rem; }
 .toc-toggle:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
-.toc-panel { background: var(--color-bg-alt); border: 1px solid var(--color-border); border-left: 3px solid var(--color-secondary); box-shadow: var(--shadow-soft); margin-top: 0.5rem; padding: 1rem; width: min(280px, calc(100vw - 2rem)); }
+.toc-panel { background: var(--color-bg-alt); border: 1px solid var(--color-border); box-shadow: var(--shadow-soft), inset 2px 0 0 var(--color-secondary); margin-top: 0.5rem; padding: 1rem; width: min(280px, calc(100vw - 2rem)); }
 .toc-panel-header { align-items: center; display: flex; gap: 0.5rem; justify-content: space-between; }
 .toc-panel h2 { color: var(--color-primary); font-size: 0.95rem; margin: 0 0 0.6rem; }
 .toc-close { background: transparent; border: 0; color: var(--color-muted); cursor: pointer; font-size: 1.4rem; line-height: 1; padding: 0.15rem 0.35rem; }
@@ -332,7 +332,6 @@ a:hover {
 .featured-card {
   background: linear-gradient(135deg, var(--color-bg-alt) 0%, var(--color-bg) 100%);
   border: 1px solid var(--color-border);
-  border-top: 4px solid var(--color-secondary);
   border-radius: 10px;
   box-shadow: var(--shadow-soft);
   padding: 1rem 1rem 0.9rem;
@@ -536,7 +535,7 @@ a:hover {
 }
 .global-search-results ul { margin: 0.45rem 0 0; padding-left: 1.2rem; }
 .global-search-results li { margin: 0.25rem 0; }
-.mdx-callout { background: var(--color-bg-alt); border-left: 4px solid var(--color-secondary); margin: 1.5rem 0; padding: 1rem 1.1rem; }
+.mdx-callout { background: var(--color-bg-alt); border-left: 2px solid var(--color-secondary); margin: 1.5rem 0; padding: 1rem 1.1rem; }
 .mdx-callout strong { color: var(--color-primary); display: block; margin-bottom: 0.35rem; }
 .mdx-callout-note { border-left-color: #3f8f7a; }
 .mdx-callout-warning { border-left-color: #bb7b2a; }
@@ -561,11 +560,10 @@ a:hover {
 
 .post-item {
   background: var(--color-bg-alt);
-  border-left: 5px solid var(--color-secondary);
+  box-shadow: var(--shadow-soft), inset 2px 0 0 var(--color-secondary);
   border-radius: 8px;
   margin-bottom: 0;
   padding: 2rem;
-  box-shadow: var(--shadow-soft);
 }
 
 /* El atributo hidden pierde contra display:grid del autor: forzarlo. */

@@ -1,0 +1,30 @@
+{
+  "hook": {
+    "enabled": true,
+    "limits": {
+      "maxFindings": 5,
+      "maxChars": 8000
+    }
+  },
+  "detector": {
+    "extensions": [
+      {
+        "ext": ".astro",
+        "engine": "html"
+      }
+    ],
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "src/lib/postImage.ts"
+        ],
+        "createdAt": "2026-10-24T05:32:19.375Z",
+        "reason": "Agente: falso positivo - la linea es una regex literal en TypeScript que construye el tag img, no un tag img real"
+      }
+    ]
+  }
+}

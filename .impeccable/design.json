@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T12:00:00-05:00",
+  "title": "Design System: Blog CCD — Edición cultural y del desarrollo social",
+  "extensions": {
+    "colorMeta": {
+      "tinta-cafe": {
+        "role": "primary",
+        "displayName": "Tinta Café Institucional",
+        "canonical": "#24130f",
+        "dark": "#f1c8ae",
+        "tonalRamp": ["oklch(12% 0.02 35)", "oklch(20% 0.035 35)", "oklch(28% 0.05 35)", "oklch(38% 0.06 35)", "oklch(52% 0.07 38)", "oklch(66% 0.07 42)", "oklch(80% 0.06 46)", "oklch(92% 0.04 50)"]
+      },
+      "terracota": {
+        "role": "secondary",
+        "displayName": "Terracota del Taller",
+        "canonical": "#9a5f3f",
+        "dark": "#e7a27b",
+        "tonalRamp": ["oklch(18% 0.04 40)", "oklch(28% 0.07 40)", "oklch(38% 0.09 42)", "oklch(48% 0.10 44)", "oklch(56% 0.11 46)", "oklch(68% 0.10 50)", "oklch(80% 0.08 54)", "oklch(92% 0.05 58)"]
+      },
+      "titular": { "role": "neutral", "displayName": "Titular Casi-Negro", "canonical": "#1f1a17", "dark": "#fff8f4" },
+      "texto": { "role": "neutral", "displayName": "Texto Cálido", "canonical": "#3f302b", "dark": "#f3e9e3" },
+      "papel": { "role": "neutral", "displayName": "Papel Crema", "canonical": "#fffdfb", "dark": "#211816" },
+      "arena": { "role": "neutral", "displayName": "Arena Suave", "canonical": "#f8f1ec", "dark": "#30231f" },
+      "superficie-fuerte": { "role": "neutral", "displayName": "Superficie Fuerte", "canonical": "#ffffff", "dark": "#3b2a25" },
+      "borde": { "role": "neutral", "displayName": "Borde Cobre Claro", "canonical": "#e4d7cf", "dark": "#59443b" },
+      "neblina": { "role": "neutral", "displayName": "Neblina", "canonical": "#667085", "dark": "#d8c4bb" },
+      "sobre-tinta": { "role": "neutral", "displayName": "Sobre-Tinta", "canonical": "#fffdfb", "dark": "#211816" },
+      "callout-nota": { "role": "functional", "displayName": "Verde Nota", "canonical": "#3f8f7a" },
+      "callout-aviso": { "role": "functional", "displayName": "Ámbar Aviso", "canonical": "#bb7b2a" },
+      "exito-verde": { "role": "functional", "displayName": "Verde Éxito", "canonical": "#147a3c" },
+      "error-rojo": { "role": "functional", "displayName": "Rojo Error", "canonical": "#b42318" },
+      "estrella-oro": { "role": "functional", "displayName": "Oro Métrica", "canonical": "#f4b740" },
+      "gris-discreto": { "role": "neutral", "displayName": "Gris Discreto", "canonical": "#98a2b3" },
+      "gris-frio": { "role": "neutral", "displayName": "Gris Frío", "canonical": "#718096" },
+      "tinta-video": { "role": "functional", "displayName": "Tinta de Video", "canonical": "#000000" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "h1 de página (.page-heading h1)." },
+      "titulo": { "displayName": "Título", "purpose": "Títulos de tarjeta y artículo." },
+      "lectura": { "displayName": "Lectura", "purpose": "Cuerpo del artículo y descripciones, serif a 68ch." },
+      "cuerpo": { "displayName": "Cuerpo UI", "purpose": "Nav, metadatos, pie, formularios — sans de sistema." },
+      "etiqueta": { "displayName": "Etiqueta", "purpose": "Eyebrows y badges uppercase." },
+      "mono": { "displayName": "Mono", "purpose": "Código dentro del artículo." }
+    },
+    "shadows": [
+      { "name": "ambiente-tarjeta", "value": "0 18px 40px rgba(36, 19, 15, 0.08)", "purpose": "Tarjetas y paneles flotantes (dark: 0 18px 40px rgba(0,0,0,0.35))." },
+      { "name": "modal", "value": "0 20px 60px rgba(36, 19, 15, 0.24)", "purpose": "Modal de autor." },
+      { "name": "pestana-superior", "value": "0 -3px 12px rgba(0, 0, 0, 0.16)", "purpose": "Pestaña «Volver arriba» (única sombra hacia arriba)." }
+    ],
+    "motion": [
+      { "name": "ease-estandar", "value": "0.2s ease", "purpose": "Transiciones de estados (enlaces, back-to-top, toggles)." },
+      { "name": "ease-carrusel", "value": "0.3s ease", "purpose": "Altura del carrusel; scroll-snap suave." },
+      { "name": "reduced-motion", "value": "0.01ms !important", "purpose": "prefers-reduced-motion desactiva animaciones y transiciones." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "980px" },
+      { "name": "movil", "value": "560px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Tarjeta de artículo",
+      "kind": "card",
+      "refersTo": "card-post",
+      "description": "Tarjeta base de listas y carruseles; borde izquierdo terracota.",
+      "html": "<article class=\"ds-card-post\"><span class=\"ds-card-post__badge\">DESTACADO</span><h3 class=\"ds-card-post__title\"><a href=\"#\">Título del artículo</a></h3><p class=\"ds-card-post__desc\">Descripción breve del artículo en serif de lectura.</p><span class=\"ds-card-post__meta\">23 oct 2026 · 5 min</span></article>",
+      "css": ".ds-card-post { background: var(--color-arena, #f8f1ec); border: 1px solid var(--color-borde, #e4d7cf); box-shadow: 0 18px 40px rgba(36, 19, 15, 0.08), inset 2px 0 0 var(--color-terracota, #9a5f3f); border-radius: 8px; padding: 1.5rem 2rem; } .ds-card-post__title { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 1.45rem; line-height: 1.16; letter-spacing: -0.01em; margin: 0.4rem 0; } .ds-card-post__title a { color: #24130f; text-decoration: none; } .ds-card-post__title a:hover { text-decoration: underline; } .ds-card-post__desc { font-family: 'Source Serif 4', Georgia, serif; color: #3f302b; line-height: 1.7; margin: 0 0 0.6rem; } .ds-card-post__meta { color: #667085; font-family: system-ui, sans-serif; font-size: 0.78rem; } .ds-card-post__badge { display: inline-block; background: #24130f; color: #fffdfb; border-radius: 999px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.3rem 0.6rem; }"
+    },
+    {
+      "name": "Tarjeta destacada",
+      "kind": "card",
+      "refersTo": "card-destacado",
+      "description": "Primer nivel de la portada: gradiente papel-arena y borde superior terracota.",
+      "html": "<article class=\"ds-card-dest\"><span class=\"ds-card-dest__eyebrow\">CULTURA</span><h3 class=\"ds-card-dest__title\"><a href=\"#\">Artículo destacado</a></h3><p>Sinopsis del destacado, en serif.</p></article>",
+      "css": ".ds-card-dest { background: linear-gradient(135deg, #f8f1ec 0%, #fffdfb 100%); border: 1px solid #e4d7cf; border-radius: 10px; box-shadow: 0 18px 40px rgba(36, 19, 15, 0.08); padding: 1rem; } .ds-card-dest__eyebrow { color: #9a5f3f; font-family: system-ui, sans-serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; } .ds-card-dest__title { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-size: 1.55rem; line-height: 1.16; margin: 0.35rem 0 0.5rem; } .ds-card-dest__title a { color: #24130f; text-decoration: none; } .ds-card-dest__title a:hover { text-decoration: underline; }"
+    },
+    {
+      "name": "Botón de carrusel",
+      "kind": "button",
+      "refersTo": "boton-carrusel",
+      "description": "Navegación circular de los carruseles de portada; objetivo táctil 44px.",
+      "html": "<button class=\"ds-carousel-btn\" aria-label=\"Anterior\">‹</button>",
+      "css": ".ds-carousel-btn { background: #f8f1ec; border: 1px solid #e4d7cf; border-radius: 50%; color: #24130f; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 2.75rem; width: 2.75rem; font-size: 1.5rem; font-weight: 700; line-height: 1; padding: 0 0 3px; transition: border-color 0.2s ease, color 0.2s ease; } .ds-carousel-btn:hover, .ds-carousel-btn:focus-visible { border-color: #9a5f3f; color: #9a5f3f; outline: 3px solid #9a5f3f; outline-offset: 3px; } .ds-carousel-btn:disabled { opacity: 0.35; cursor: default; }"
+    },
+    {
+      "name": "Input de búsqueda",
+      "kind": "input",
+      "refersTo": "input-busqueda",
+      "description": "Campo de búsqueda y filtro de autor; 1rem evita el zoom en iOS.",
+      "html": "<input class=\"ds-search\" type=\"search\" placeholder=\"Buscar artículos…\" />",
+      "css": ".ds-search { background: #fffdfb; border: 1px solid #e4d7cf; border-radius: 5px; color: #3f302b; font-family: system-ui, sans-serif; font-size: 1rem; line-height: 1.25; height: 2.1rem; padding: 0.25rem 0.65rem; } .ds-search:focus { border-color: #9a5f3f; outline: 2px solid color-mix(in srgb, #9a5f3f 25%, transparent); }"
+    },
+    {
+      "name": "Badge destacado",
+      "kind": "chip",
+      "refersTo": "badge-destacado",
+      "description": "Píldora sólida de «Destacado»; la insignia de la portada.",
+      "html": "<span class=\"ds-badge\">DESTACADO</span>",
+      "css": ".ds-badge { display: inline-block; background: #24130f; color: #fffdfb; border-radius: 999px; font-family: system-ui, sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.3rem 0.6rem; }"
+    },
+    {
+      "name": "Volver arriba",
+      "kind": "custom",
+      "refersTo": "boton-volver-arriba",
+      "description": "Firma del sistema: pestaña-cúpula que asoma del pie.",
+      "html": "<a class=\"ds-back-top\" href=\"#top\">▲ Volver arriba</a>",
+      "css": ".ds-back-top { display: flex; align-items: center; justify-content: center; background: #24130f; border: 1px solid #24130f; border-bottom: 0; border-radius: 50% 50% 0 0 / 100% 100% 0 0; color: #fffdfb; font-family: system-ui, sans-serif; font-size: 0.9rem; font-weight: 600; text-decoration: none; height: 3.75rem; width: 7.5rem; padding: 1.15rem 0.5rem 0; margin: 2rem auto -1.5rem; text-align: center; box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.16); transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease; } .ds-back-top:hover { background: #9a5f3f; border-color: #9a5f3f; transform: translateY(-2px); } .ds-back-top:active { background: #ffffff; color: #24130f; transform: translateY(0); }"
+    },
+    {
+      "name": "Callout MDX",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Bloque de nota/advertencia dentro del artículo.",
+      "html": "<aside class=\"ds-callout\"><strong>Nota</strong><p>Contenido del callout.</p></aside>",
+      "css": ".ds-callout { background: #f8f1ec; border-left: 2px solid #9a5f3f; margin: 1.5rem 0; padding: 1rem 1.1rem; } .ds-callout strong { display: block; color: #24130f; font-family: system-ui, sans-serif; margin-bottom: 0.35rem; } .ds-callout p { font-family: 'Source Serif 4', Georgia, serif; color: #3f302b; margin: 0; line-height: 1.7; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Edición cultural y del desarrollo social",
+    "overview": "Sistema editorial cálido del blog de la Corporación Cultura y Desarrollo: un periódico cultural impreso que aprendió a vivir en pantalla. Paleta de tintas y papeles (marrón casi negro, terracota, papel crema), Source Serif 4 auto-alojada para todo lo que se lee y sans de sistema para todo lo que se opera. Densidad de lectura larga: medida 68ch, acento terracota escaso y estructural. Anti-referencia explícita: el look startup/tech (gradientes morados, glassmorphism, neón).",
+    "keyCharacteristics": [
+      "Papel cálido (#fffdfb) en lugar de blanco puro",
+      "Serif editorial para contenido, sans para infraestructura",
+      "Terracota como acento escaso y estructural",
+      "Dual theme completo resuelto solo con variables",
+      "Imágenes siempre completas, sin recortes",
+      "Accesibilidad como infraestructura (foco 3px, 44px, reduced-motion)"
+    ],
+    "rules": [
+      { "name": "La Regla del Papel", "body": "Nunca blanco puro como fondo: el fondo es Papel Crema (#fffdfb) o Arena (#f8f1ec). La calidez del papel es la identidad.", "section": "colors" },
+      { "name": "La Regla de la Terracota Escasa", "body": "El acento terracota no pinta superficies grandes: vive en enlaces, eyebrows, bordes estructurales y foco. Si aparece más del ~10% de una pantalla, algo está mal.", "section": "colors" },
+      { "name": "La Regla de la Medida", "body": "El texto de lectura nunca excede 68ch.", "section": "typography" },
+      { "name": "La Regla Serif/Sans", "body": "Serif = contenido (títulos, lectura). Sans = infraestructura (UI, metadatos). Nunca al revés.", "section": "typography" },
+      { "name": "La Regla Plano-por-Defecto", "body": "Las superficies descansan planas; la sombra aparece solo en flotación.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do mantener títulos y lectura en Source Serif 4 y la UI en sans de sistema.",
+      "Do mostrar imágenes y videos completos (object-fit: contain, radio 6px).",
+      "Do usar foco visible de 3px terracota con offset 3px.",
+      "Do garantizar objetivos táctiles ≥44px.",
+      "Do resolver el tema oscuro solo con las variables de :root[data-theme='dark'].",
+      "Do respetar la medida de 68ch en cualquier texto de lectura nuevo."
+    ],
+    "donts": [
+      "Don't recortar imágenes con object-fit: cover en tarjetas o artículo.",
+      "Don't introducir gradientes morados, glassmorphism, neón ni el look startup.",
+      "Don't usar blanco puro de fondo ni grises neutros en bordes.",
+      "Don't pasar de ~200ms en transiciones de UI ni animar acciones de teclado.",
+      "Don't pintar superficies grandes de terracota: es acento, no fondo."
+    ]
+  }
+}
