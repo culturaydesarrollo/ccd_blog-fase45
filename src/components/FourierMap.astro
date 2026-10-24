@@ -28,23 +28,41 @@
       <input
         id="fourier-terminos"
         type="range"
-        min="1"
-        max="350"
+        min="0"
+        max="1000"
         step="1"
-        value="90"
+        value="768"
+        list="fourier-octavas"
+        aria-valuemin="1"
+        aria-valuemax="350"
+        aria-valuenow="90"
+        aria-valuetext="90 términos"
       />
-      <output class="fourier-k" for="fourier-terminos">90</output>
+      <output class="fourier-k" for="fourier-terminos">90 / 350</output>
     </label>
+    <datalist id="fourier-octavas">
+      <option value="0"></option>
+      <option value="118"></option>
+      <option value="237"></option>
+      <option value="355"></option>
+      <option value="473"></option>
+      <option value="592"></option>
+      <option value="710"></option>
+      <option value="828"></option>
+      <option value="947"></option>
+      <option value="1000"></option>
+    </datalist>
     <p class="fourier-error">
-      Error de aproximación:
+      Error de aproximación:{' '}
       <strong class="fourier-error-valor">…</strong>
     </p>
   </div>
 
   <figcaption>
     Serie de Fourier sobre el contorno continental de Colombia (Natural
-    Earth, dominio público). El error se mide contra la curva base por la
-    identidad de Parseval.
+    Earth, dominio público). El cursor avanza en escala logarítmica —a mitad de
+    recorrido, 19 términos; al final, 350— y el error se mide contra la curva
+    base por la identidad de Parseval.
   </figcaption>
 </figure>
 
@@ -107,7 +125,7 @@
     color: var(--color-text);
     font-variant-numeric: tabular-nums;
     font-weight: 700;
-    min-width: 3ch;
+    min-width: 9ch;
     text-align: right;
   }
 
@@ -234,15 +252,23 @@
     }
 
     // --- Términos activos: indices con |k| <= K, ordenados por energía ---
-    let K = Number(slider.value);
+    // Recorrido del cursor logarítmico: 350^(p/1000). Cada octava de términos
+    // (1→2→4→…→350) ocupa el mismo tramo de cursor; al 50 %, K≈19.
+    function terminosDePosicion(p: number): number {
+      return Math.max(1, Math.round(350 ** (p / 1000)));
+    }
+    let K = terminosDePosicion(Number(slider.value));
     let idxs: number[] = [];
 
     function ordenar() {
       idxs = [];
       for (let k = -K; k <= K; k++) idxs.push(k + KMAX);
       idxs.sort((a, b) => (cre[b] ** 2 + cim[b] ** 2) - (cre[a] ** 2 + cim[a] ** 2));
-      salidaK.textContent = String(K);
+      salidaK.textContent = `${K} / 350`;
       salidaErr.textContent = listo ? formatear(errorDe(K)) : '…';
+      // El slider guarda la posición log; teclado y lectores anuncian los términos
+      slider.setAttribute('aria-valuenow', String(K));
+      slider.setAttribute('aria-valuetext', K === 1 ? '1 término' : `${K} términos`);
     }
 
     function formatear(v: number): string {
@@ -389,10 +415,27 @@
 
     // --- Controles ---
     slider.addEventListener('input', () => {
-      K = Number(slider.value);
+      K = terminosDePosicion(Number(slider.value));
       ordenar();
       limpiarRastro();
       if (estatico && listo) pintarEstatico();
+    });
+
+    // Teclado: cada pulsación da una octava (dobla o mitad los términos), la
+    // misma distancia que separa las marcas del datalist. El techo es 350.
+    const OCTAVA = Math.round((Math.log(2) / Math.log(350)) * 1000); // 118
+    slider.addEventListener('keydown', (e) => {
+      const dir =
+        e.key === 'ArrowRight' || e.key === 'ArrowUp'
+          ? 1
+          : e.key === 'ArrowLeft' || e.key === 'ArrowDown'
+            ? -1
+            : 0;
+      if (dir === 0) return;
+      e.preventDefault();
+      const p = Math.min(1000, Math.max(0, Number(slider.value) + dir * OCTAVA));
+      slider.value = String(p);
+      slider.dispatchEvent(new Event('input'));
     });
 
     new ResizeObserver(() => {
