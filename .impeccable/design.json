@@ -48,7 +48,9 @@
     ],
     "motion": [
       { "name": "ease-estandar", "value": "0.2s ease", "purpose": "Transiciones de estados (enlaces, back-to-top, toggles)." },
-      { "name": "ease-carrusel", "value": "0.3s ease", "purpose": "Altura del carrusel; scroll-snap suave." },
+      { "name": "scroll-carrusel", "value": "scroll-behavior: smooth (nativo)", "purpose": "Desplazamiento del carrusel via scroll-snap + scrollTo/scrollBy smooth; sin transition de height (layout en swipe, retirada 24/10/2026)." },
+      { "name": "entrada-panel", "value": "opacity + translateY(-4px) 0.2s ease, allow-discrete + @starting-style", "purpose": "Entradas que abren/cierran con [hidden] sin JS: desplegable Explorar, panel TOC y resultados de busqueda global." },
+      { "name": "entrada-modal", "value": "veladura opacity + tarjeta translateY(8px) 0.2s ease, allow-discrete + @starting-style", "purpose": "Modal de autor (5 instancias) - fade de la veladura + tarjeta que sube al abrir." },
       { "name": "reduced-motion", "value": "0.01ms !important", "purpose": "prefers-reduced-motion desactiva animaciones y transiciones." }
     ],
     "breakpoints": [

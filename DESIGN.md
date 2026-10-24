@@ -258,6 +258,15 @@ Bordes estructurales de acento: **izquierdo 2px** terracota (tarjetas post, call
 
 Media: radio 6px, `object-fit: contain` SIEMPRE — el contenido manda sobre el marco. Firma geométrica única: la pestaña «Volver arriba» con cúpula (`border-radius: 50% 50% 0 0 / 100% 100% 0 0`) anclada al borde inferior del pie.
 
+## Motion
+
+Movimiento sereno y funcional: sirve para explicar estado, nunca decora. Casi todo es CSS (0 keyframes, 0 animaciones JS); se anima solo `transform`, `opacity`, `color`, `background-color` y `border-color` (propiedades baratas de composite/paint). Límite duro: **≤200ms**.
+
+- **`ease-estandar` (0.2s ease)**: token único de transiciones de estado (enlaces, toggles, back-to-top, estrellas).
+- **Entradas de paneles y modal (24/10/2026)**: el sitio abre/cierra con el atributo `hidden` (JS intacto). Las entradas usan `transition-behavior: allow-discrete` + `@starting-style` (CSS puro, degradación limpia en navegadores sin soporte): modal de autor (veladura `opacity` + tarjeta `translateY(8px)→0`), desplegable «Explorar», panel TOC y resultados de búsqueda global (`opacity` + `translateY(-4px)→0`).
+- **Carrusel**: sin `transition: height`; usa `scroll-behavior` nativo + `scroll-snap` (la altura se ajusta instantánea, sin layout animado durante el swipe).
+- **`prefers-reduced-motion`**: blanket global en `global.css` (duración 0.01ms, `iteration-count` 1, `scroll-behavior: auto`) que blinda todo lo presente y futuro; refuerzos puntuales en el carrusel y el toast del formulario.
+
 ## Components
 
 ### Tarjetas de artículo (`.post-item`)
