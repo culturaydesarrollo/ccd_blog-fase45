@@ -666,7 +666,7 @@
         ctx.moveTo(rastro2[0], rastro2[1]);
         for (let i = 1; i < rastro2Len; i++) ctx.lineTo(rastro2[i * 2], rastro2[i * 2 + 1]);
         ctx.strokeStyle = col.terracota;
-        ctx.lineWidth = 1.7;
+        ctx.lineWidth = 1;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         ctx.stroke();
@@ -687,7 +687,7 @@
       ctx.lineJoin = 'round';
       ctx.stroke(trazoCompleto());
       ctx.strokeStyle = col.terracota;
-      ctx.lineWidth = 1.7;
+      ctx.lineWidth = 1;
       ctx.lineJoin = 'round';
       ctx.stroke(trazoCompleto2());
       ctx.beginPath();
