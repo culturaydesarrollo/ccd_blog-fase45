@@ -39,7 +39,6 @@
         aria-valuetext="19 términos"
       />
       <output class="fourier-k" for="fourier-terminos">19 / 350</output>
-      <span class="fourier-habitantes" aria-hidden="true"></span>
     </label>
     <datalist id="fourier-octavas">
       <option value="0"></option>
@@ -181,13 +180,6 @@
     text-align: right;
   }
 
-  .fourier-habitantes {
-    color: var(--color-secondary);
-    flex-basis: 100%;
-    font-variant-numeric: tabular-nums;
-    margin-left: auto;
-  }
-
   .fourier-error {
     color: var(--color-muted);
     margin: 0;
@@ -217,11 +209,10 @@
   const lienzo = raiz?.querySelector<HTMLCanvasElement>('canvas');
   const slider = raiz?.querySelector<HTMLInputElement>('input[type="range"]');
   const salidaK = raiz?.querySelector<HTMLElement>('.fourier-k');
-  const salidaHabitantes = raiz?.querySelector<HTMLElement>('.fourier-habitantes');
   const salidaErr = raiz?.querySelector<HTMLElement>('.fourier-error-valor');
   const ctx = lienzo?.getContext('2d');
 
-  if (raiz && lienzo && slider && salidaK && salidaHabitantes && salidaErr && ctx) {
+  if (raiz && lienzo && slider && salidaK && salidaErr && ctx) {
     const N = COLOMBIA_N;
     const KMAX = N / 2;
     const estatico = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -233,6 +224,10 @@
         tinta: cs.getPropertyValue('--color-text').trim() || '#24130f',
         terracota: cs.getPropertyValue('--color-secondary').trim() || '#9a5f3f',
         neblina: cs.getPropertyValue('--color-muted').trim() || '#667085',
+        fondo: cs.getPropertyValue('--color-bg-alt').trim() || '#f7f4f0',
+        borde: cs.getPropertyValue('--color-border').trim() || '#e6ded6',
+        // Canvas no resuelve var(): se trae la pila declarada del token
+        serif: cs.getPropertyValue('--font-serif').trim() || 'Georgia, serif',
       };
     }
     let col = leerColores();
@@ -331,9 +326,11 @@
     let idxs: number[] = [];
 
     // Términos expresados en habitantes: la población de Colombia
-    // (52.695.952) repartida entre los 350 términos posibles.
+    // (52.695.952) repartida entre los 350 términos posibles. El reporte se
+    // pinta en la esquina inferior derecha del lienzo (ver pintarReporte).
     const HAB_X_TERMINO = 52695952 / 350;
     const fmtHab = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+    let reporte = '';
 
     function ordenar() {
       idxs = [];
@@ -341,7 +338,7 @@
       idxs.sort((a, b) => (cre[b] ** 2 + cim[b] ** 2) - (cre[a] ** 2 + cim[a] ** 2));
       const habitantes = fmtHab.format(Math.round(K * HAB_X_TERMINO));
       salidaK.textContent = `${K} / 350`;
-      salidaHabitantes.textContent = `≈ ${habitantes} habitantes`;
+      reporte = `≈ ${habitantes} habitantes`;
       salidaErr.textContent = listo ? formatear(errorDe(K)) : '…';
       // El slider guarda la posición del cursor; teclado y lectores anuncian términos
       slider.setAttribute('aria-valuenow', String(K));
@@ -349,6 +346,8 @@
         'aria-valuetext',
         `${K === 1 ? '1 término' : `${K} términos`}, equivalen a ${habitantes} habitantes`
       );
+      // El lienzo se repinta en cada llamante (bucle, input, ResizeObserver,
+      // preparar): aquí solo se actualiza el texto que dibujará pintarReporte.
     }
 
     function formatear(v: number): string {
@@ -428,6 +427,32 @@
       ctx.fill();
     }
 
+    // Reporte de habitantes en la esquina inferior derecha del lienzo.
+    // Se pinta el último de cada cuadro para no quedar tapado por el trazo.
+    function pintarReporte() {
+      if (!reporte) return;
+      ctx.save();
+      const fs = Math.max(11, Math.min(13, w / 34));
+      ctx.font = `600 ${fs}px ${col.serif}`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = col.terracota;
+      const x = w - 10;
+      const y = h - 12;
+      // Placa tenue detrás del texto: el trazo pasa por debajo sin ilegibilidad
+      const tw = ctx.measureText(reporte).width;
+      ctx.fillStyle = col.fondo;
+      ctx.globalAlpha = 0.82;
+      ctx.fillRect(x - tw - 8, y - fs - 5, tw + 16, fs + 11);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = col.borde;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x - tw - 8, y - fs - 5, tw + 16, fs + 11);
+      ctx.fillStyle = col.terracota;
+      ctx.fillText(reporte, x, y);
+      ctx.restore();
+    }
+
     function trazoCompleto(): Path2D {
       const p = new Path2D();
       for (let j = 0; j <= N; j++) {
@@ -459,6 +484,7 @@
       ctx.arc(px, py, 3, 0, Math.PI * 2);
       ctx.fillStyle = col.terracota;
       ctx.fill();
+      pintarReporte();
     }
 
     // --- Bucle animado ---
@@ -484,6 +510,7 @@
         if (rastroLen < N) rastroLen++;
       }
       pintarRastroYD(px, py);
+      pintarReporte();
       raf = requestAnimationFrame(cuadro);
     }
 
