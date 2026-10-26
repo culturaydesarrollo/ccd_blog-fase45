@@ -28,29 +28,29 @@
       <input
         id="fourier-terminos"
         type="range"
-        min="0"
-        max="1000"
+        min="1"
+        max="100"
         step="1"
-        value="750"
-        list="fourier-octavas"
+        value="28"
+        list="fourier-porcentajes"
         aria-valuemin="1"
-        aria-valuemax="350"
-        aria-valuenow="19"
-        aria-valuetext="19 términos"
+        aria-valuemax="100"
+        aria-valuenow="28"
+        aria-valuetext="28 % de la serie, 98 términos"
       />
-      <output class="fourier-k" for="fourier-terminos">19 / 350</output>
+      <output class="fourier-k" for="fourier-terminos">98 / 350</output>
     </label>
-    <datalist id="fourier-octavas">
-      <option value="0"></option>
-      <option value="410"></option>
-      <option value="547"></option>
-      <option value="649"></option>
-      <option value="731"></option>
-      <option value="803"></option>
-      <option value="867"></option>
-      <option value="924"></option>
-      <option value="977"></option>
-      <option value="1000"></option>
+    <datalist id="fourier-porcentajes">
+      <option value="10"></option>
+      <option value="20"></option>
+      <option value="30"></option>
+      <option value="40"></option>
+      <option value="50"></option>
+      <option value="60"></option>
+      <option value="70"></option>
+      <option value="80"></option>
+      <option value="90"></option>
+      <option value="100"></option>
     </datalist>
     <p class="fourier-error">
       Error de aproximación:{' '}
@@ -60,12 +60,12 @@
 
   <figcaption>
     Serie de Fourier sobre el contorno continental de Colombia (Natural
-    Earth, dominio público). El cursor es exigente: a tres cuartos de su
-    recorrido se llevan apenas 19 términos y hace falta llegar al final —los
-    350— para el trazo completo. Cada término representa 150.559,86
-    habitantes: la población colombiana (52.695.952) repartida entre los 350
-    términos posibles. El error se mide contra la curva base por la
-    identidad de Parseval.
+    Earth, dominio público). La barra es lineal y representa el porcentaje
+    de la serie usado para el trazo: a mitad de su recorrido son 175
+    términos y al final los 350 completos. Cada término representa
+    150.559,86 habitantes: la población colombiana (52.695.952) repartida
+    entre los 350 términos posibles. El error se mide contra la curva base
+    por la identidad de Parseval.
   </figcaption>
 </figure>
 
@@ -108,7 +108,8 @@
     align-items: center;
     display: flex;
     flex: 1 1 250px;
-    gap: 0.6rem;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.6rem;
   }
 
   .fourier-nombre {
@@ -117,13 +118,16 @@
     white-space: nowrap;
   }
 
+  /* La barra ocupa una fila entera arriba; etiqueta y contador comparten la
+     fila de abajo. Así nada se apelmaza en pantallas estrechas. */
   .fourier-control input[type='range'] {
     -webkit-appearance: none;
     appearance: none;
     background: transparent;
-    flex: 1;
+    flex: 1 0 100%;
     height: 1.75rem;
-    min-width: 110px;
+    min-width: 0;
+    order: -1;
   }
 
   /* Pista: riel tenue; el acento lo pone el pulgar */
@@ -176,6 +180,7 @@
     color: var(--color-text);
     font-variant-numeric: tabular-nums;
     font-weight: 700;
+    margin-left: auto;
     min-width: 9ch;
     text-align: right;
   }
@@ -204,17 +209,93 @@
   const CICLO_MS = 15000; // una vuelta completa del trazado (sereno, no apurado)
   const PAUSA_MS = 1100; // asomo al país terminado antes de empezar de nuevo
   const MAX_CIRCULOS = 48; // círculos visibles (los de mayor energía); la cadena suma todos
+  const N = COLOMBIA_N;
+  const KMAX = N / 2;
+  // Términos expresados en habitantes: la población de Colombia
+  // (52.695.952) repartida entre los 350 términos posibles.
+  const HAB_X_TERMINO = 52695952 / 350;
+  const fmtHab = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 
-  const raiz = document.querySelector<HTMLElement>('.fourier-map');
-  const lienzo = raiz?.querySelector<HTMLCanvasElement>('canvas');
-  const slider = raiz?.querySelector<HTMLInputElement>('input[type="range"]');
-  const salidaK = raiz?.querySelector<HTMLElement>('.fourier-k');
-  const salidaErr = raiz?.querySelector<HTMLElement>('.fourier-error-valor');
-  const ctx = lienzo?.getContext('2d');
+  /*
+   * Con <ClientRouter /> el módulo corre una sola vez por sesión, así que el
+   * init se ancla a astro:page-load (que también se dispara en la carga
+   * inicial) y re-captura el DOM nuevo. La DFT solo depende de los datos: se
+   * calcula una vez y queda en caché entre navegaciones. Al navegar se corre
+   * la limpieza de la tanda anterior (detener): se cancela el
+   * requestAnimationFrame y se desconectan los observadores, que de otro modo
+   * seguirían apuntando al canvas viejo.
+   */
 
-  if (raiz && lienzo && slider && salidaK && salidaErr && ctx) {
-    const N = COLOMBIA_N;
-    const KMAX = N / 2;
+  // --- Serie de Fourier (una sola vez; O(N^2) ≈ 10^6 ops) ---
+  const cre = new Float64Array(N + 1);
+  const cim = new Float64Array(N + 1);
+  const prefijo = new Float64Array(N + 2);
+  const sufijo = new Float64Array(N + 2);
+  let listo = false;
+
+  function calcularDft() {
+    if (listo) return;
+    for (let k = -KMAX; k <= KMAX; k++) {
+      let sr = 0, si = 0, wr = 1, wi = 0;
+      const paso = (-2 * Math.PI * k) / N;
+      const cr = Math.cos(paso), ci = Math.sin(paso);
+      for (let j = 0; j < N; j++) {
+        const xr = COLOMBIA[j * 2], xi = COLOMBIA[j * 2 + 1];
+        sr += xr * wr - xi * wi;
+        si += xr * wi + xi * wr;
+        const nr = wr * cr - wi * ci;
+        wi = wr * ci + wi * cr;
+        wr = nr;
+      }
+      cre[k + KMAX] = sr / N;
+      cim[k + KMAX] = si / N;
+    }
+    // Error por Parseval: RMS(z_K - z)^2 = suma de |c_k|^2 con |k| > K.
+    // Prefijos y sufijos hacen que consultarlo cueste O(1) por K.
+    let acc = 0;
+    for (let i = 0; i <= N; i++) { prefijo[i] = acc; acc += cre[i] ** 2 + cim[i] ** 2; }
+    acc = 0;
+    for (let i = N; i >= 0; i--) { sufijo[i] = acc; acc += cre[i] ** 2 + cim[i] ** 2; }
+    listo = true;
+  }
+
+  function errorDe(K: number): number {
+    // |k| > K  ⇔  indices [0, KMAX-K-1] ∪ [KMAX+K+1, N]
+    return Math.sqrt(prefijo[KMAX - K] + sufijo[KMAX + K]) * 100;
+  }
+
+  // --- Términos activos: indices con |k| <= K, ordenados por energía ---
+  // El slider representa el porcentaje de la serie (1..100) de forma lineal
+  // y proporcional al valor que dibuja: 50 % son 175 de los 350 términos y
+  // 100 % la serie completa.
+  const TERMINOS = 350;
+  function terminosDePosicion(p: number): number {
+    return Math.min(TERMINOS, Math.max(1, Math.round((p / 100) * TERMINOS)));
+  }
+  function posicionDe(K: number): number {
+    return Math.min(100, Math.max(1, Math.round((K * 100) / TERMINOS)));
+  }
+
+  function formatear(v: number): string {
+    // Espacio fino antes del % (tipografía española)
+    return v.toFixed(2).replace('.', ',') + '\u00a0%';
+  }
+
+  // Limpieza de la tanda anterior (se ejecuta al navegar con el router)
+  let detener: (() => void) | null = null;
+
+  function init() {
+    detener?.();
+    detener = null;
+
+    const raiz = document.querySelector<HTMLElement>('.fourier-map');
+    const lienzo = raiz?.querySelector<HTMLCanvasElement>('canvas');
+    const slider = raiz?.querySelector<HTMLInputElement>('input[type="range"]');
+    const salidaK = raiz?.querySelector<HTMLElement>('.fourier-k');
+    const salidaErr = raiz?.querySelector<HTMLElement>('.fourier-error-valor');
+    const ctx = lienzo?.getContext('2d');
+
+    if (raiz && lienzo && slider && salidaK && salidaErr && ctx) {
     const estatico = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // --- Colores del sistema (viven en :root / [data-theme='dark']) ---
@@ -231,13 +312,6 @@
       };
     }
     let col = leerColores();
-    new MutationObserver(() => {
-      col = leerColores();
-      if (estatico && listo) pintarEstatico();
-    }).observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    });
 
     // --- Geometría del lienzo ---
     let w = 0, h = 0, esc = 1, cx = 0, cy = 0;
@@ -298,38 +372,15 @@
       listo = true;
     }
 
-    const prefijo = new Float64Array(N + 2);
-    const sufijo = new Float64Array(N + 2);
-
-    function errorDe(K: number): number {
-      // |k| > K  ⇔  indices [0, KMAX-K-1] ∪ [KMAX+K+1, N]
-      return Math.sqrt(prefijo[KMAX - K] + sufijo[KMAX + K]) * 100;
-    }
-
-    // --- Términos activos: indices con |k| <= K, ordenados por energía ---
-    // Recorrido del cursor 350^(x^EXPO), exigente a propósito: a tres
-    // cuartos de recorrido (p=750) K≈19 —el punto donde el croquis ya se
-    // reconoce— y solo el tramo final da los 350 términos completos.
-    // EXPO se eligió tal que 0.75^EXPO = ln(19)/ln(350).
-    const EXPO = 2.39;
-    function terminosDePosicion(p: number): number {
-      const x = Math.min(1, Math.max(0, p / 1000));
-      return Math.max(1, Math.round(350 ** (x ** EXPO)));
-    }
-    function posicionDe(K: number): number {
-      return Math.round(1000 * (Math.log(K) / Math.log(350)) ** (1 / EXPO));
-    }
+    // --- Estado inicial del cursor ---
     // Cada visita arranca en un lugar distinto de la serie (15..99 términos)
     const K_INICIAL = 15 + Math.floor(Math.random() * 85);
     slider.value = String(posicionDe(K_INICIAL));
     let K = K_INICIAL;
     let idxs: number[] = [];
 
-    // Términos expresados en habitantes: la población de Colombia
-    // (52.695.952) repartida entre los 350 términos posibles. El reporte se
-    // pinta en la esquina inferior derecha del lienzo (ver pintarReporte).
-    const HAB_X_TERMINO = 52695952 / 350;
-    const fmtHab = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+    // El reporte de habitantes se pinta en la esquina inferior derecha del
+    // lienzo (ver pintarReporte); la cifra se arma en ordenar().
     let reporte = '';
 
     function ordenar() {
@@ -340,19 +391,15 @@
       salidaK.textContent = `${K} / 350`;
       reporte = `≈ ${habitantes} habitantes`;
       salidaErr.textContent = listo ? formatear(errorDe(K)) : '…';
-      // El slider guarda la posición del cursor; teclado y lectores anuncian términos
-      slider.setAttribute('aria-valuenow', String(K));
+      // El slider guarda el porcentaje (1..100); teclado y lectores anuncian
+      // términos y habitantes, que es lo que el lector entiende
+      slider.setAttribute('aria-valuenow', String(Math.round((K * 100) / TERMINOS)));
       slider.setAttribute(
         'aria-valuetext',
         `${K === 1 ? '1 término' : `${K} términos`}, equivalen a ${habitantes} habitantes`
       );
       // El lienzo se repinta en cada llamante (bucle, input, ResizeObserver,
       // preparar): aquí solo se actualiza el texto que dibujará pintarReporte.
-    }
-
-    function formatear(v: number): string {
-      // Espacio fino antes del % (tipografía española)
-      return v.toFixed(2).replace('.', ',') + '\u00a0%';
     }
 
     // --- Estado del trazo ---
@@ -521,6 +568,8 @@
     }
 
     // --- Controles ---
+    // Escala lineal 1..100 %: el teclado nativo del slider (±1 por paso)
+    // ya se comporta como el puntero, así que no hace falta handler propio.
     slider.addEventListener('input', () => {
       K = terminosDePosicion(Number(slider.value));
       ordenar();
@@ -528,27 +577,21 @@
       if (estatico && listo) pintarEstatico();
     });
 
-    // Teclado: cada pulsación dobla o mitad los términos (una octava), la
-    // misma distancia que separa las marcas del datalist. El techo es 350.
-    slider.addEventListener('keydown', (e) => {
-      const dir =
-        e.key === 'ArrowRight' || e.key === 'ArrowUp'
-          ? 1
-          : e.key === 'ArrowLeft' || e.key === 'ArrowDown'
-            ? -1
-            : 0;
-      if (dir === 0) return;
-      e.preventDefault();
-      const nuevo = Math.min(350, Math.max(1, Math.round(K * (dir === 1 ? 2 : 0.5))));
-      slider.value = String(posicionDe(nuevo));
-      slider.dispatchEvent(new Event('input'));
-    });
-
-    new ResizeObserver(() => {
+    const roLienzo = new ResizeObserver(() => {
       medir();
       limpiarRastro();
       if (estatico && listo) pintarEstatico();
-    }).observe(lienzo);
+    });
+    roLienzo.observe(lienzo);
+
+    const obsTema = new MutationObserver(() => {
+      col = leerColores();
+      if (estatico && listo) pintarEstatico();
+    });
+    obsTema.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
 
     // DFT diferido hasta que la pieza se vea (no penaliza la carga de la página)
     function preparar() {
@@ -558,8 +601,9 @@
       if (estatico) pintarEstatico(); else arrancar();
     }
 
+    let ioVisible: IntersectionObserver | null = null;
     if ('IntersectionObserver' in window) {
-      const io = new IntersectionObserver((entradas) => {
+      ioVisible = new IntersectionObserver((entradas) => {
         if (entradas[0].isIntersecting) {
           if (!listo) preparar();
           else if (!estatico) arrancar();
@@ -567,9 +611,20 @@
           cancelAnimationFrame(raf); // fuera de vista: sin costo
         }
       }, { rootMargin: '120px' });
-      io.observe(lienzo);
+      ioVisible.observe(lienzo);
     } else {
       preparar();
     }
+
+    // Al navegar: parar el bucle y desconectar observadores del DOM viejo
+    detener = () => {
+      cancelAnimationFrame(raf);
+      roLienzo.disconnect();
+      obsTema.disconnect();
+      ioVisible?.disconnect();
+    };
+    }
   }
+
+  document.addEventListener('astro:page-load', init);
 </script>
