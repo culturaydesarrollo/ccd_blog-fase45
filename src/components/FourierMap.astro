@@ -10,10 +10,10 @@
   <div class="fourier-lienzo">
     <canvas
       role="img"
-      aria-label="Animación: los círculos giratorios de una serie de Fourier van trazando el contorno de Colombia."
+      aria-label="Animación: los círculos giratorios de una serie de Fourier van trazando el contorno de Colombia, con el departamento del Tolima destacado en su ubicación."
     >
-      Esta pieza dibuja el contorno de Colombia con una serie de Fourier y
-      requiere JavaScript para animarse.
+      Esta pieza dibuja el contorno de Colombia con una serie de Fourier, con
+      el Tolima destacado, y requiere JavaScript para animarse.
     </canvas>
     <noscript>
       <p class="fourier-noscript">
@@ -60,7 +60,8 @@
 
   <figcaption>
     Serie de Fourier sobre el contorno continental de Colombia (Natural
-    Earth, dominio público). La barra es lineal y representa el porcentaje
+    Earth, dominio público), con el departamento del Tolima destacado en su
+    ubicación. La barra es lineal y representa el porcentaje
     de la serie usado para el trazo: a mitad de su recorrido son 175
     términos y al final los 350 completos. Cada término representa
     150.559,86 habitantes: la población colombiana (52.695.952) repartida
@@ -206,6 +207,7 @@
 
 <script>
   import { COLOMBIA, COLOMBIA_N } from '../data/colombia-outline';
+  import { TOLIMA, TOLIMA_N } from '../data/tolima-outline';
 
   const CICLO_MS = 15000; // una vuelta completa del trazado (sereno, no apurado)
   const PAUSA_MS = 1100; // asomo al país terminado antes de empezar de nuevo
@@ -317,6 +319,7 @@
     // --- Geometría del lienzo ---
     let w = 0, h = 0, esc = 1, cx = 0, cy = 0;
     let guia: Path2D | null = null;
+    let tolima: Path2D | null = null;
 
     function medir() {
       const dpr = window.devicePixelRatio || 1;
@@ -329,6 +332,7 @@
       esc = Math.min((w * 0.76) / 1.449, (h * 0.76) / 2.0);
       cx = w / 2; cy = h / 2;
       guia = guiaPath();
+      tolima = tolimaPath();
     }
 
     function guiaPath(): Path2D {
@@ -337,6 +341,20 @@
         const i = (j % N) * 2;
         const x = cx + COLOMBIA[i] * esc;
         const y = cy - COLOMBIA[i + 1] * esc; // y+ = norte en datos, y+ = abajo en canvas
+        if (j === 0) p.moveTo(x, y); else p.lineTo(x, y);
+      }
+      return p;
+    }
+
+    // El Tolima, proyectado con la MISMA escala y centro que la guía de
+    // Colombia (sus datos ya vienen en el mismo marco normalizado), cae en su
+    // ubicación exacta dentro del país.
+    function tolimaPath(): Path2D {
+      const p = new Path2D();
+      for (let j = 0; j <= TOLIMA_N; j++) {
+        const i = (j % TOLIMA_N) * 2;
+        const x = cx + TOLIMA[i] * esc;
+        const y = cy - TOLIMA[i + 1] * esc;
         if (j === 0) p.moveTo(x, y); else p.lineTo(x, y);
       }
       return p;
@@ -455,6 +473,20 @@
         ctx.globalAlpha = 0.35;
         ctx.lineWidth = 1;
         ctx.stroke(guia);
+        ctx.restore();
+      }
+      // El Tolima, en su ubicación: relleno tenue de terracota y trazo más
+      // firme, para que se lea como el departamento destacado del país.
+      if (tolima) {
+        ctx.save();
+        ctx.fillStyle = col.terracota;
+        ctx.globalAlpha = 0.14;
+        ctx.fill(tolima);
+        ctx.globalAlpha = 0.85;
+        ctx.strokeStyle = col.terracota;
+        ctx.lineWidth = 1.4;
+        ctx.lineJoin = 'round';
+        ctx.stroke(tolima);
         ctx.restore();
       }
     }
