@@ -66,6 +66,10 @@ function enBloques<T>(arr: T[], size = 2): T[][] {
 }
 
 const authorList = [...new Set(sortedPosts.map((post) => post.data.author))].sort((a, b) => a.localeCompare(b));
+// Categorías existentes (en minúscula y únicas) para el filtro de portada
+const categoryList = [
+  ...new Set(sortedPosts.flatMap((post) => post.data.category.map((c) => c.toLowerCase()))),
+].sort((a, b) => a.localeCompare(b));
 const latestPost = sortedPosts[0] ?? null;
 // Destacados: todos los marcados como featured (aunque estén más allá de la primera página)
 const featuredPosts = sortedPosts.filter((post) => post.data.featured && post.id !== latestPost?.id);
@@ -137,6 +141,12 @@ const websiteSchema = {
                         <option value={author}>{author}</option>
                     ))}
                 </select>
+                <select id="blog-category-filter" class="blog-author-filter" aria-label="Filtrar por categoría">
+                    <option value="">Todas las categorías</option>
+                    {categoryList.map((category) => (
+                        <option value={category}>{category}</option>
+                    ))}
+                </select>
             </form>
             <p id="blog-search-count" class="blog-search-count" aria-live="polite">
                 {sortedPosts.length} artículo{sortedPosts.length === 1 ? '' : 's'} · página 1 de {pageCount}
@@ -157,7 +167,7 @@ const websiteSchema = {
                                 <h2 id="latest-heading">Artículo reciente</h2>
                             </div>
                             <div class="featured-grid">
-                                <article class="featured-card latest-card" data-search={latestPost.searchText} data-author={latestPost.data.author} data-post-id={latestPost.id}>
+                                <article class="featured-card latest-card" data-search={latestPost.searchText} data-author={latestPost.data.author} data-category={latestPost.data.category.map((c) => c.toLowerCase()).join('|')} data-post-id={latestPost.id}>
                                     <div class="latest-card-header">
                                         <span class="featured-badge">Reciente</span>
                                         <h3>
@@ -233,7 +243,7 @@ const websiteSchema = {
                                     <div class="carousel-slide">
                                     <ul class="posts-list">
                                 {bloque.map((post) => (
-                                    <li class:list={['post-item', { 'post-item-with-image': Boolean(post.data.image) }]} data-search={post.searchText} data-author={post.data.author} data-post-id={post.id}>
+                                    <li class:list={['post-item', { 'post-item-with-image': Boolean(post.data.image) }]} data-search={post.searchText} data-author={post.data.author} data-category={post.data.category.map((c) => c.toLowerCase()).join('|')} data-post-id={post.id}>
                                 <div class="older-post-content">
                                 {post.data.featured && <span class="featured-badge">Destacado</span>}
                                 <h2>
@@ -298,7 +308,7 @@ const websiteSchema = {
                                     <div class="carousel-slide">
                                     <ul class="posts-list">
                                 {bloque.map((post) => (
-                                    <li class:list={['post-item', { 'post-item-with-image': Boolean(post.data.image) }]} data-search={post.searchText} data-author={post.data.author} data-post-id={post.id}>
+                                    <li class:list={['post-item', { 'post-item-with-image': Boolean(post.data.image) }]} data-search={post.searchText} data-author={post.data.author} data-category={post.data.category.map((c) => c.toLowerCase()).join('|')} data-post-id={post.id}>
                                 <div class="older-post-content">
                                 {post.data.featured && <span class="featured-badge">Destacado</span>}
                                 <h2>
@@ -365,151 +375,171 @@ const websiteSchema = {
         import '../scripts/carrusel.js';
     </script>
     <script is:inline>
-        const searchInput = document.getElementById('blog-search-input');
-        const authorFilter = document.getElementById('blog-author-filter');
-        const searchForm = document.getElementById('blog-search-form');
-        const posts = Array.from(document.querySelectorAll('.post-item, .featured-card'));
-        const emptyState = document.getElementById('blog-empty-state');
-        const countEl = document.getElementById('blog-search-count');
-        const countBase = countEl?.textContent || '';
-        const globalResults = document.getElementById('global-search-results');
-        const searchIndexUrl = searchForm?.dataset.indexUrl || '/search-index.json';
-        const siteBaseUrl = searchForm?.dataset.baseUrl || '/';
-        let globalIndex = null;
+        /*
+         * Con <ClientRouter /> este inline corre una vez por sesión: el init
+         * se ancla a astro:page-load y re-captura en cada visita el DOM nuevo
+         * (posts, contadores y formularios cambian con el swap). Solo los
+         * binds a document usan AbortController; los de elementos no acumulan
+         * porque el DOM viejo se descarta. La caché del índice de búsqueda
+         * vive en window y sobrevive a las navegaciones.
+         */
+        if (!window.__ccdIndexEvitaDoble) {
+            window.__ccdIndexEvitaDoble = true;
+            let idxCtrl = new AbortController();
 
-        const loadGlobalIndex = async () => {
-            if (globalIndex) return globalIndex;
-            const response = await fetch(searchIndexUrl);
-            if (!response.ok) throw new Error('No se pudo cargar el índice de búsqueda.');
-            globalIndex = (await response.json()).items || [];
-            return globalIndex;
-        };
+            document.addEventListener('astro:page-load', () => {
+                idxCtrl.abort();
+                idxCtrl = new AbortController();
+                const signal = idxCtrl.signal;
 
-        const renderGlobalResults = (query, selectedAuthor = '') => {
-            if (!globalResults) return;
-            const matches = globalIndex.filter((item) =>
-                item.text.toLowerCase().includes(query) &&
-                (!selectedAuthor || item.author === selectedAuthor)
-            );
-            globalResults.replaceChildren();
-            if (!query || matches.length === 0) {
-                globalResults.hidden = true;
-                return;
-            }
-            const heading = document.createElement('strong');
-            heading.textContent = `Resultados en todo el archivo (${matches.length})`;
-            globalResults.append(heading);
-            const list = document.createElement('ul');
-            matches.slice(0, 8).forEach((item) => {
-                const li = document.createElement('li');
-                const link = document.createElement('a');
-                link.href = `${siteBaseUrl.replace(/\/$/, '')}${item.url}`;
-                link.textContent = item.title;
-                li.append(link);
-                list.append(li);
-            });
-            globalResults.append(list);
-            globalResults.hidden = false;
-        };
+                const searchInput = document.getElementById('blog-search-input');
+                const authorFilter = document.getElementById('blog-author-filter');
+                const categoryFilter = document.getElementById('blog-category-filter');
+                const searchForm = document.getElementById('blog-search-form');
+                const posts = Array.from(document.querySelectorAll('.post-item, .featured-card'));
+                const emptyState = document.getElementById('blog-empty-state');
+                const countEl = document.getElementById('blog-search-count');
+                const countBase = countEl?.textContent || '';
+                const globalResults = document.getElementById('global-search-results');
+                const searchIndexUrl = searchForm?.dataset.indexUrl || '/search-index.json';
+                const siteBaseUrl = searchForm?.dataset.baseUrl || '/';
 
-        const applyFilters = () => {
-            const query = (searchInput?.value || '').trim().toLowerCase();
-            const selectedAuthor = authorFilter?.value || '';
-            // Set de posts visibles: cuenta artículos únicos (los destacados se repiten en dos carruseles)
-            const visibles = new Set();
+                const loadGlobalIndex = async () => {
+                    if (window.__ccdGlobalIndex) return window.__ccdGlobalIndex;
+                    const response = await fetch(searchIndexUrl);
+                    if (!response.ok) throw new Error('No se pudo cargar el índice de búsqueda.');
+                    window.__ccdGlobalIndex = (await response.json()).items || [];
+                    return window.__ccdGlobalIndex;
+                };
 
-            posts.forEach((post) => {
-                const haystack = (post.dataset.search || post.textContent || '').toLowerCase();
-                const matchesQuery = !query || haystack.includes(query);
-                const matchesAuthor = !selectedAuthor || (post.dataset.author || '') === selectedAuthor;
-                const match = matchesQuery && matchesAuthor;
-                post.hidden = !match;
-                if (match) visibles.add(post.dataset.postId || post);
-            });
-
-            document.querySelectorAll('.featured-section, .older-posts-section').forEach((section) => {
-                section.hidden = !section.querySelector('.featured-card:not([hidden]), .post-item:not([hidden])');
-            });
-
-            const filtrando = Boolean(query || selectedAuthor);
-            if (emptyState) emptyState.hidden = visibles.size !== 0;
-            if (countEl) {
-                if (filtrando) {
-                    const label = visibles.size === 1 ? 'artículo' : 'artículos';
-                    countEl.textContent = `${visibles.size} ${label} coincidentes`;
-                } else {
-                    countEl.textContent = countBase;
-                }
-            }
-            if (query) loadGlobalIndex().then(() => renderGlobalResults(query, selectedAuthor)).catch(() => {});
-            else if (globalResults) globalResults.hidden = true;
-            window.__rebuildCarousels?.();
-        };
-
-        searchInput?.addEventListener('input', applyFilters);
-        authorFilter?.addEventListener('change', applyFilters);
-        searchForm?.addEventListener('submit', (event) => {
-            event.preventDefault();
-            applyFilters();
-        });
-
-        document.querySelectorAll('.author-modal').forEach((modal) => {
-            modal.hidden = true;
-            modal.setAttribute('aria-hidden', 'true');
-        });
-
-        document.querySelectorAll('[data-author-modal]').forEach((trigger) => {
-            if (trigger.dataset.authorModalBound === 'true') return;
-            trigger.dataset.authorModalBound = 'true';
-
-            const modal = document.getElementById(trigger.dataset.authorModal);
-            const closeButton = modal?.querySelector('.author-modal-close');
-            if (!modal || !closeButton) return;
-
-            const closeModal = () => {
-                modal.hidden = true;
-                modal.setAttribute('aria-hidden', 'true');
-            };
-
-            const openModal = () => {
-                document.querySelectorAll('.author-modal').forEach((otherModal) => {
-                    if (otherModal !== modal) {
-                        otherModal.hidden = true;
-                        otherModal.setAttribute('aria-hidden', 'true');
+                const renderGlobalResults = (query, selectedAuthor = '', selectedCategory = '') => {
+                    if (!globalResults) return;
+                    const matches = window.__ccdGlobalIndex.filter((item) =>
+                        item.text.toLowerCase().includes(query) &&
+                        (!selectedAuthor || item.author === selectedAuthor) &&
+                        (!selectedCategory || (item.category || []).map((c) => c.toLowerCase()).includes(selectedCategory))
+                    );
+                    globalResults.replaceChildren();
+                    if (!query || matches.length === 0) {
+                        globalResults.hidden = true;
+                        return;
                     }
+                    const heading = document.createElement('strong');
+                    heading.textContent = `Resultados en todo el archivo (${matches.length})`;
+                    globalResults.append(heading);
+                    const list = document.createElement('ul');
+                    matches.slice(0, 8).forEach((item) => {
+                        const li = document.createElement('li');
+                        const link = document.createElement('a');
+                        link.href = `${siteBaseUrl.replace(/\/$/, '')}${item.url}`;
+                        link.textContent = item.title;
+                        li.append(link);
+                        list.append(li);
+                    });
+                    globalResults.append(list);
+                    globalResults.hidden = false;
+                };
+
+                const applyFilters = () => {
+                    const query = (searchInput?.value || '').trim().toLowerCase();
+                    const selectedAuthor = authorFilter?.value || '';
+                    const selectedCategory = categoryFilter?.value || '';
+                    // Set de posts visibles: cuenta artículos únicos (los destacados se repiten en dos carruseles)
+                    const visibles = new Set();
+
+                    posts.forEach((post) => {
+                        const haystack = (post.dataset.search || post.textContent || '').toLowerCase();
+                        const matchesQuery = !query || haystack.includes(query);
+                        const matchesAuthor = !selectedAuthor || (post.dataset.author || '') === selectedAuthor;
+                        const matchesCategory = !selectedCategory || (post.dataset.category || '').split('|').includes(selectedCategory);
+                        const match = matchesQuery && matchesAuthor && matchesCategory;
+                        post.hidden = !match;
+                        if (match) visibles.add(post.dataset.postId || post);
+                    });
+
+                    document.querySelectorAll('.featured-section, .older-posts-section').forEach((section) => {
+                        section.hidden = !section.querySelector('.featured-card:not([hidden]), .post-item:not([hidden])');
+                    });
+
+                    const filtrando = Boolean(query || selectedAuthor || selectedCategory);
+                    if (emptyState) emptyState.hidden = visibles.size !== 0;
+                    if (countEl) {
+                        if (filtrando) {
+                            const label = visibles.size === 1 ? 'artículo' : 'artículos';
+                            countEl.textContent = `${visibles.size} ${label} coincidentes`;
+                        } else {
+                            countEl.textContent = countBase;
+                        }
+                    }
+                    if (query) loadGlobalIndex().then(() => renderGlobalResults(query, selectedAuthor, selectedCategory)).catch(() => {});
+                    else if (globalResults) globalResults.hidden = true;
+                    window.__rebuildCarousels?.();
+                };
+
+                searchInput?.addEventListener('input', applyFilters);
+                authorFilter?.addEventListener('change', applyFilters);
+                categoryFilter?.addEventListener('change', applyFilters);
+                searchForm?.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    applyFilters();
                 });
-                modal.hidden = false;
-                modal.setAttribute('aria-hidden', 'false');
-            };
 
-            trigger.addEventListener('click', (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                if (modal.hidden) {
-                    openModal();
-                    return;
-                }
-                closeModal();
-            });
-
-            closeButton.addEventListener('click', (event) => {
-                event.preventDefault();
-                closeModal();
-            });
-
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) closeModal();
-            });
-        });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
                 document.querySelectorAll('.author-modal').forEach((modal) => {
                     modal.hidden = true;
                     modal.setAttribute('aria-hidden', 'true');
                 });
-            }
-        });
+
+                document.querySelectorAll('[data-author-modal]').forEach((trigger) => {
+                    const modal = document.getElementById(trigger.dataset.authorModal);
+                    const closeButton = modal?.querySelector('.author-modal-close');
+                    if (!modal || !closeButton) return;
+
+                    const closeModal = () => {
+                        modal.hidden = true;
+                        modal.setAttribute('aria-hidden', 'true');
+                    };
+
+                    const openModal = () => {
+                        document.querySelectorAll('.author-modal').forEach((otherModal) => {
+                            if (otherModal !== modal) {
+                                otherModal.hidden = true;
+                                otherModal.setAttribute('aria-hidden', 'true');
+                            }
+                        });
+                        modal.hidden = false;
+                        modal.setAttribute('aria-hidden', 'false');
+                    };
+
+                    trigger.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (modal.hidden) {
+                            openModal();
+                            return;
+                        }
+                        closeModal();
+                    });
+
+                    closeButton.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        closeModal();
+                    });
+
+                    modal.addEventListener('click', (event) => {
+                        if (event.target === modal) closeModal();
+                    });
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape') {
+                        document.querySelectorAll('.author-modal').forEach((modal) => {
+                            modal.hidden = true;
+                            modal.setAttribute('aria-hidden', 'true');
+                        });
+                    }
+                }, { signal });
+            });
+        }
     </script>
     <BackToTop slot="after-footer" />
 </Layout>
