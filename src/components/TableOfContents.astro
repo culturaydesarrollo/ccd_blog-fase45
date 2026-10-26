@@ -33,27 +33,38 @@ const visibleHeadings = headings.filter((heading) => heading.depth >= 2 && headi
 )}
 
 <script>
-  const toc = document.querySelector<HTMLElement>('.toc');
-  const toggle = toc?.querySelector<HTMLButtonElement>('.toc-toggle');
-  const close = toc?.querySelector<HTMLButtonElement>('.toc-close');
-  const panel = toc?.querySelector<HTMLElement>('.toc-panel');
+  // Con <ClientRouter /> el módulo corre una vez: el init se re-ejecuta en
+  // cada astro:page-load sobre el DOM nuevo. Los dos binds a document llevan
+  // la señal del AbortController de la tanda para no acumularse al navegar.
+  let tocCtrl = new AbortController();
 
-  if (toc && toggle && close && panel) {
-    const setOpen = (open: boolean) => {
-      toggle.setAttribute('aria-expanded', String(open));
-      panel.hidden = !open;
-      if (open) close.focus();
-      else toggle.focus();
-    };
+  document.addEventListener('astro:page-load', () => {
+    tocCtrl.abort();
+    tocCtrl = new AbortController();
+    const signal = tocCtrl.signal;
 
-    toggle.addEventListener('click', () => setOpen(panel.hidden));
-    close.addEventListener('click', () => setOpen(false));
-    panel.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && !panel.hidden) setOpen(false);
-    });
-    document.addEventListener('click', (event) => {
-      if (!panel.hidden && !toc.contains(event.target as Node)) setOpen(false);
-    });
-  }
+    const toc = document.querySelector<HTMLElement>('.toc');
+    const toggle = toc?.querySelector<HTMLButtonElement>('.toc-toggle');
+    const close = toc?.querySelector<HTMLButtonElement>('.toc-close');
+    const panel = toc?.querySelector<HTMLElement>('.toc-panel');
+
+    if (toc && toggle && close && panel) {
+      const setOpen = (open: boolean) => {
+        toggle.setAttribute('aria-expanded', String(open));
+        panel.hidden = !open;
+        if (open) close.focus();
+        else toggle.focus();
+      };
+
+      toggle.addEventListener('click', () => setOpen(panel.hidden));
+      close.addEventListener('click', () => setOpen(false));
+      panel.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !panel.hidden) setOpen(false);
+      }, { signal });
+      document.addEventListener('click', (event) => {
+        if (!panel.hidden && !toc.contains(event.target as Node)) setOpen(false);
+      }, { signal });
+    }
+  });
 </script>

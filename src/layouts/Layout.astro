@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import BlogNavbar from '../components/BlogNavbar.astro';
 import SeoHead from '../components/SeoHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -44,6 +45,36 @@ const { title, description, type = 'website', author, publishedDate, image, imag
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="icon" href="/favicon.ico" sizes="48x48" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+		<!--
+		  View Transitions (opción F). El router sustituye el <html> completo en
+		  cada navegación, lo que descarta data-theme y data-text-size. Este
+		  fragmento se ejecuta antes del swap (astro:after-swap) y al cargar, así
+		  que el tema persiste sin parpadeo. Va is:inline: debe correr antes que
+		  el pintado y sobrevivir a los cambios de ruta.
+		-->
+		<script is:inline>
+			(function () {
+				var aplicar = function () {
+					var raiz = document.documentElement;
+					var tema = null;
+					var tamano = null;
+					try {
+						tema = localStorage.getItem('ccd-theme');
+						tamano = localStorage.getItem('ccd-text-size');
+					} catch (e) {
+						/* almacenamiento bloqueado: se respeta el tema por defecto */
+					}
+					if (tema === 'dark' || tema === 'light') raiz.dataset.theme = tema;
+					if (tamano === 'larger' || tamano === 'smaller') raiz.dataset.textSize = tamano;
+					else delete raiz.dataset.textSize;
+				};
+				document.addEventListener('astro:after-swap', aplicar);
+				aplicar();
+			})();
+		</script>
+		<ClientRouter />
+
 		<slot name="head" />
 	</head>
 	<body id="top">

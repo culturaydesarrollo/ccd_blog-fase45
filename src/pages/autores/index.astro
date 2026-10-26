@@ -79,44 +79,63 @@ const items = authors.map((author) => {
   </div>
 
   <script>
-    const modals = Array.from(document.querySelectorAll<HTMLElement>('.author-modal'));
+    /*
+     * Con <ClientRouter /> este módulo corre una vez por sesión, así que el
+     * init se ancla a astro:page-load (también se dispara en la carga inicial)
+     * y re-captura el DOM nuevo. El único bind a document —Escape— lleva la
+     * señal del AbortController de la tanda para no acumularse al navegar.
+     * El guard window.__ccdAutoresEvitaDoble evita doble registro si Astro
+     * volviera a ejecutar el módulo.
+     */
+    if (!window.__ccdAutoresEvitaDoble) {
+      window.__ccdAutoresEvitaDoble = true;
+      let autoresCtrl = new AbortController();
 
-    const closeModals = (except?: HTMLElement) => {
-      for (const modal of modals) {
-        if (modal === except) continue;
-        modal.hidden = true;
-        modal.setAttribute('aria-hidden', 'true');
-      }
-    };
+      document.addEventListener('astro:page-load', () => {
+        autoresCtrl.abort();
+        autoresCtrl = new AbortController();
+        const signal = autoresCtrl.signal;
 
-    document.querySelectorAll<HTMLButtonElement>('[data-author-modal]').forEach((trigger) => {
-      trigger.addEventListener('click', () => {
-        const modal = document.getElementById(trigger.dataset.authorModal ?? '');
-        if (!modal) return;
-        const opening = modal.hidden;
-        closeModals();
-        modal.hidden = !opening;
-        modal.setAttribute('aria-hidden', String(!opening));
-        if (opening) modal.querySelector<HTMLElement>('.author-modal-close')?.focus();
-      });
-    });
+        const modals = Array.from(document.querySelectorAll<HTMLElement>('.author-modal'));
 
-    for (const modal of modals) {
-      modal.querySelector<HTMLElement>('.author-modal-close')?.addEventListener('click', () => {
-        modal.hidden = true;
-        modal.setAttribute('aria-hidden', 'true');
-      });
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-          modal.hidden = true;
-          modal.setAttribute('aria-hidden', 'true');
+        const closeModals = (except?: HTMLElement) => {
+          for (const modal of modals) {
+            if (modal === except) continue;
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+          }
+        };
+
+        document.querySelectorAll<HTMLButtonElement>('[data-author-modal]').forEach((trigger) => {
+          trigger.addEventListener('click', () => {
+            const modal = document.getElementById(trigger.dataset.authorModal ?? '');
+            if (!modal) return;
+            const opening = modal.hidden;
+            closeModals();
+            modal.hidden = !opening;
+            modal.setAttribute('aria-hidden', String(!opening));
+            if (opening) modal.querySelector<HTMLElement>('.author-modal-close')?.focus();
+          });
+        });
+
+        for (const modal of modals) {
+          modal.querySelector<HTMLElement>('.author-modal-close')?.addEventListener('click', () => {
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+          });
+          modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+              modal.hidden = true;
+              modal.setAttribute('aria-hidden', 'true');
+            }
+          });
         }
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') closeModals();
+        }, { signal });
       });
     }
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeModals();
-    });
   </script>
 
   <style>

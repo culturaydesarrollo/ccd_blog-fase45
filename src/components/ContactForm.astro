@@ -396,9 +396,26 @@ const formAction = apiBase ? `${apiBase}/api/contact` : `https://formspree.io/f/
 </style>
 
 <script>
-  // --- Modal de contacto: apertura por enlaces y cierre -------------------
-  const contactDialog = document.getElementById('contacto');
-  const dialogAvailable = contactDialog instanceof HTMLDialogElement;
+  /*
+   * Con <ClientRouter /> este módulo corre una vez por sesión, así que todo el
+   * init se ancla a astro:page-load (también se dispara en la carga inicial) y
+   * re-captura el DOM nuevo (el diálogo y el formulario cambian con el swap).
+   * Los binds a document/window —clic en enlaces, hashchange, pageshow y
+   * load— llevan la señal del AbortController de la tanda para no acumularse
+   * al navegar. El guard window.__ccdContactEvitaDoble evita doble registro.
+   */
+  if (!window.__ccdContactEvitaDoble) {
+    window.__ccdContactEvitaDoble = true;
+    let contactCtrl = new AbortController();
+
+    document.addEventListener('astro:page-load', () => {
+      contactCtrl.abort();
+      contactCtrl = new AbortController();
+      const signal = contactCtrl.signal;
+
+      // --- Modal de contacto: apertura por enlaces y cierre -------------------
+      const contactDialog = document.getElementById('contacto');
+      const dialogAvailable = contactDialog instanceof HTMLDialogElement;
 
   // Con el hash puesto, el fallback :target re-aparecería como caja fija
   // al cerrar el modal: se limpia en cuanto se abre con JavaScript.
@@ -446,30 +463,30 @@ const formAction = apiBase ? `${apiBase}/api/contact` : `https://formspree.io/f/
     // El Escape lo cierra el navegador de forma nativa.
   }
 
-  // Enlaces "Contacto" (#contacto y /#contacto): si el modal existe en esta
-  // página se abre sin navegar; si no (p. ej. /acerca), se navega y allí
-  // el hash dispare la apertura al cargar.
-  document.addEventListener('click', (event) => {
-    const target = event.target;
-    if (!(target instanceof Element)) return;
-    const anchor = target.closest('a[href]');
-    if (!anchor) return;
-    const href = anchor.getAttribute('href') || '';
-    if (href !== '#contacto' && href !== '/#contacto') return;
-    if (!dialogAvailable) return;
-    // Ctrl/Cmd+click sigue abriendo la pestaña nueva.
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    openContactDialog();
-  });
+    // Enlaces "Contacto" (#contacto y /#contacto): si el modal existe en esta
+    // página se abre sin navegar; si no (p. ej. /acerca), se navega y allí
+    // el hash dispare la apertura al cargar.
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href') || '';
+      if (href !== '#contacto' && href !== '/#contacto') return;
+      if (!dialogAvailable) return;
+      // Ctrl/Cmd+click sigue abriendo la pestaña nueva.
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      openContactDialog();
+    }, { signal });
 
-  if (window.location.hash === '#contacto') {
-    openContactDialog();
-  }
-  window.addEventListener('hashchange', () => {
-    if (window.location.hash !== '#contacto') return;
-    openContactDialog();
-  });
+    if (window.location.hash === '#contacto') {
+      openContactDialog();
+    }
+    window.addEventListener('hashchange', () => {
+      if (window.location.hash !== '#contacto') return;
+      openContactDialog();
+    }, { signal });
 
   // --- Formulario ---------------------------------------------------------
   const form = document.querySelector('form.contact-form');
@@ -721,10 +738,12 @@ const formAction = apiBase ? `${apiBase}/api/contact` : `https://formspree.io/f/
       if (event.persisted || event.type === 'pageshow') {
         resetFormState();
       }
-    });
+    }, { signal });
 
     window.addEventListener('load', () => {
       resetFormState();
+    }, { signal });
+      }
     });
   }
 </script>

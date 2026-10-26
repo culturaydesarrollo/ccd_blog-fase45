@@ -207,10 +207,22 @@ const api = apiBase ? `${apiBase}/api/articles/${articleId}` : '';
 </style>
 
 <script>
-  const seccion = document.querySelector<HTMLElement>('#comentarios[data-api]');
-  const api = seccion?.dataset.api;
+  /*
+   * Con <ClientRouter /> este módulo corre una vez por sesión, así que todo el
+   * init se ancla a astro:page-load (también se dispara en la carga inicial) y
+   * re-captura el DOM nuevo: la sección de comentarios cambia con el swap. No
+   * hay binds a document/window —solo a elementos, que el swap descarta—, así
+   * que no hace falta AbortController. El guard window.__ccdComentsEvitaDoble
+   * evita doble registro si Astro volviera a ejecutar el módulo.
+   */
+  if (!window.__ccdComentsEvitaDoble) {
+    window.__ccdComentsEvitaDoble = true;
 
-  if (seccion && api) {
+    document.addEventListener('astro:page-load', async () => {
+      const seccion = document.querySelector<HTMLElement>('#comentarios[data-api]');
+      const api = seccion?.dataset.api;
+
+      if (seccion && api) {
     const lista = seccion.querySelector<HTMLElement>('.comments-list');
     const form = seccion.querySelector<HTMLFormElement>('.comments-form');
     const status = seccion.querySelector<HTMLElement>('.comments-status');
@@ -338,6 +350,8 @@ const api = apiBase ? `${apiBase}/api/articles/${articleId}` : '';
         mensaje('No se pudo enviar el comentario. Inténtalo de nuevo más tarde.', 'error');
       } finally {
         if (boton) boton.disabled = false;
+      }
+    });
       }
     });
   }

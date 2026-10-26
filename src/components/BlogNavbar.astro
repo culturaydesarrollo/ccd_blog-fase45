@@ -362,113 +362,133 @@ const entrarHref = `${panelBase}/login`;
   }
 </style>
 <script is:inline>
-  const menuButton = document.querySelector('.menu-toggle');
-  const navigation = document.querySelector('#primary-navigation');
-  const navbar = menuButton?.closest('.blog-navbar');
-  const menuLabel = menuButton?.querySelector('.sr-only');
-  const closeMenu = () => {
-    navigation?.removeAttribute('data-open');
-    menuButton?.setAttribute('aria-expanded', 'false');
-    if (menuLabel) menuLabel.textContent = 'Abrir menú';
-  };
+  /*
+   * Con <ClientRouter /> este script corre una sola vez por sesión, así que
+   * todo el init se ancla a astro:page-load (se dispara también en la carga
+   * inicial). En cada navegación se aborta el AbortController anterior: solo
+   * sobreviven los binds de document/window de la página vigente. Los binds a
+   * elementos no necesitan señal (el DOM viejo se descarta entero) pero sí se
+   * re-capturan, porque el swap reemplaza <html> y el navbar.
+   * El guard window.__ccdNavEvitaDoble evita registrar el listener dos veces
+   * si Astro volviera a ejecutar este inline.
+   */
+  if (!window.__ccdNavEvitaDoble) {
+    window.__ccdNavEvitaDoble = true;
+    let navCtrl = new AbortController();
 
-  menuButton?.addEventListener('click', () => {
-    const isOpen = navigation?.getAttribute('data-open') === 'true';
-    if (isOpen) {
-      closeMenu();
-      return;
-    }
-    navigation?.setAttribute('data-open', 'true');
-    menuButton.setAttribute('aria-expanded', 'true');
-    if (menuLabel) menuLabel.textContent = 'Cerrar menú';
-  });
+    document.addEventListener('astro:page-load', () => {
+      navCtrl.abort();
+      navCtrl = new AbortController();
+      const signal = navCtrl.signal;
 
-  document.addEventListener('pointerdown', (event) => {
-    if (
-      navigation?.getAttribute('data-open') === 'true' &&
-      navbar &&
-      event.target instanceof Node &&
-      !navbar.contains(event.target)
-    ) {
-      closeMenu();
-    }
-  });
+      const menuButton = document.querySelector('.menu-toggle');
+      const navigation = document.querySelector('#primary-navigation');
+      const navbar = menuButton?.closest('.blog-navbar');
+      const menuLabel = menuButton?.querySelector('.sr-only');
+      const closeMenu = () => {
+        navigation?.removeAttribute('data-open');
+        menuButton?.setAttribute('aria-expanded', 'false');
+        if (menuLabel) menuLabel.textContent = 'Abrir menú';
+      };
 
-  /* Desplegable «Explorar»: clic, teclado, clic fuera y Escape */
-  const explorarToggle = document.querySelector('.nav-desplegable-toggle');
-  const explorarMenu = document.querySelector('#nav-explorar');
-  const explorarItem = explorarToggle?.closest('.nav-item-desplegable');
-  const openExplorar = () => {
-    explorarMenu?.removeAttribute('hidden');
-    explorarToggle?.setAttribute('aria-expanded', 'true');
-  };
-  const closeExplorar = () => {
-    explorarMenu?.setAttribute('hidden', '');
-    explorarToggle?.setAttribute('aria-expanded', 'false');
-  };
+      menuButton?.addEventListener('click', () => {
+        const isOpen = navigation?.getAttribute('data-open') === 'true';
+        if (isOpen) {
+          closeMenu();
+          return;
+        }
+        navigation?.setAttribute('data-open', 'true');
+        menuButton.setAttribute('aria-expanded', 'true');
+        if (menuLabel) menuLabel.textContent = 'Cerrar menú';
+      });
 
-  explorarToggle?.addEventListener('click', () => {
-    const isOpen = explorarToggle.getAttribute('aria-expanded') === 'true';
-    if (isOpen) closeExplorar();
-    else openExplorar();
-  });
+      document.addEventListener('pointerdown', (event) => {
+        if (
+          navigation?.getAttribute('data-open') === 'true' &&
+          navbar &&
+          event.target instanceof Node &&
+          !navbar.contains(event.target)
+        ) {
+          closeMenu();
+        }
+      }, { signal });
 
-  explorarMenu?.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', closeExplorar);
-  });
+      /* Desplegable «Explorar»: clic, teclado, clic fuera y Escape */
+      const explorarToggle = document.querySelector('.nav-desplegable-toggle');
+      const explorarMenu = document.querySelector('#nav-explorar');
+      const explorarItem = explorarToggle?.closest('.nav-item-desplegable');
+      const openExplorar = () => {
+        explorarMenu?.removeAttribute('hidden');
+        explorarToggle?.setAttribute('aria-expanded', 'true');
+      };
+      const closeExplorar = () => {
+        explorarMenu?.setAttribute('hidden', '');
+        explorarToggle?.setAttribute('aria-expanded', 'false');
+      };
 
-  document.addEventListener('pointerdown', (event) => {
-    if (
-      explorarToggle?.getAttribute('aria-expanded') === 'true' &&
-      explorarItem &&
-      event.target instanceof Node &&
-      !explorarItem.contains(event.target)
-    ) {
-      closeExplorar();
-    }
-  });
+      explorarToggle?.addEventListener('click', () => {
+        const isOpen = explorarToggle.getAttribute('aria-expanded') === 'true';
+        if (isOpen) closeExplorar();
+        else openExplorar();
+      });
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeMenu();
-      closeExplorar();
-    }
-  });
+      explorarMenu?.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', closeExplorar);
+      });
 
-  navigation?.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', closeMenu);
-  });
+      document.addEventListener('pointerdown', (event) => {
+        if (
+          explorarToggle?.getAttribute('aria-expanded') === 'true' &&
+          explorarItem &&
+          event.target instanceof Node &&
+          !explorarItem.contains(event.target)
+        ) {
+          closeExplorar();
+        }
+      }, { signal });
 
-  const themeButton = document.querySelector('.theme-toggle');
-  const root = document.documentElement;
-  const storedTheme = localStorage.getItem('ccd-theme');
-  if (storedTheme === 'dark' || storedTheme === 'light') root.dataset.theme = storedTheme;
-  const syncThemeButton = () => {
-    const dark = root.dataset.theme === 'dark';
-    themeButton?.setAttribute('aria-pressed', String(dark));
-    if (themeButton) themeButton.textContent = dark ? 'Claro' : 'Oscuro';
-  };
-  syncThemeButton();
-  themeButton?.addEventListener('click', () => {
-    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-    root.dataset.theme = next;
-    localStorage.setItem('ccd-theme', next);
-    syncThemeButton();
-    closeMenu();
-  });
-  const textRoot = document.documentElement;
-  const storedTextSize = localStorage.getItem('ccd-text-size');
-  if (storedTextSize === 'larger' || storedTextSize === 'smaller') textRoot.dataset.textSize = storedTextSize;
-  document.querySelectorAll('[data-text-size]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const value = button.getAttribute('data-text-size');
-      if (value === 'reset') {
-        delete textRoot.dataset.textSize;
-        localStorage.removeItem('ccd-text-size');
-      } else if (value) {
-        textRoot.dataset.textSize = value;
-        localStorage.setItem('ccd-text-size', value);
-      }
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeMenu();
+          closeExplorar();
+        }
+      }, { signal });
+
+      navigation?.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', closeMenu);
+      });
+
+      const themeButton = document.querySelector('.theme-toggle');
+      const root = document.documentElement;
+      const storedTheme = localStorage.getItem('ccd-theme');
+      if (storedTheme === 'dark' || storedTheme === 'light') root.dataset.theme = storedTheme;
+      const syncThemeButton = () => {
+        const dark = root.dataset.theme === 'dark';
+        themeButton?.setAttribute('aria-pressed', String(dark));
+        if (themeButton) themeButton.textContent = dark ? 'Claro' : 'Oscuro';
+      };
+      syncThemeButton();
+      themeButton?.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        localStorage.setItem('ccd-theme', next);
+        syncThemeButton();
+        closeMenu();
+      });
+      const storedTextSize = localStorage.getItem('ccd-text-size');
+      if (storedTextSize === 'larger' || storedTextSize === 'smaller') root.dataset.textSize = storedTextSize;
+      document.querySelectorAll('[data-text-size]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const value = button.getAttribute('data-text-size');
+          if (value === 'reset') {
+            delete root.dataset.textSize;
+            localStorage.removeItem('ccd-text-size');
+          } else if (value) {
+            root.dataset.textSize = value;
+            localStorage.setItem('ccd-text-size', value);
+          }
+        });
+      });
     });
-  });
+  }
 </script>

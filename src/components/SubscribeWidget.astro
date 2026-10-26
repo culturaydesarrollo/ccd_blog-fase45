@@ -252,11 +252,28 @@ const endpoint = apiBase ? `${apiBase}/api/subscribe` : '';
 </style>
 
 <script>
-  // --- Modal del boletín: apertura por enlaces y cierre -------------------
-  // Mismo patrón que el modal de contacto (#contacto), con su propio id.
-  const subscribeDialog = document.getElementById('suscribete');
-  const subscribeAvailable = subscribeDialog instanceof HTMLDialogElement;
-  const subscribeStatus = document.querySelector('.subscribe-status');
+  /*
+   * Con <ClientRouter /> este módulo corre una vez por sesión, así que todo el
+   * init se ancla a astro:page-load (también se dispara en la carga inicial) y
+   * re-captura el DOM nuevo (el diálogo y el formulario cambian con el swap).
+   * Los binds a document/window —clic en enlaces y hashchange— llevan la
+   * señal del AbortController de la tanda para no acumularse al navegar. El
+   * guard window.__ccdSubsEvitaDoble evita doble registro.
+   */
+  if (!window.__ccdSubsEvitaDoble) {
+    window.__ccdSubsEvitaDoble = true;
+    let subsCtrl = new AbortController();
+
+    document.addEventListener('astro:page-load', () => {
+      subsCtrl.abort();
+      subsCtrl = new AbortController();
+      const signal = subsCtrl.signal;
+
+      // --- Modal del boletín: apertura por enlaces y cierre -------------------
+      // Mismo patrón que el modal de contacto (#contacto), con su propio id.
+      const subscribeDialog = document.getElementById('suscribete');
+      const subscribeAvailable = subscribeDialog instanceof HTMLDialogElement;
+      const subscribeStatus = document.querySelector('.subscribe-status');
 
   // Con el hash puesto, el fallback :target re-aparecería como caja fija
   // al cerrar el modal: se limpia en cuanto se abre con JavaScript.
@@ -318,7 +335,7 @@ const endpoint = apiBase ? `${apiBase}/api/subscribe` : '';
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     openSubscribeDialog();
-  });
+  }, { signal });
 
   if (window.location.hash === '#suscribete') {
     openSubscribeDialog();
@@ -326,7 +343,7 @@ const endpoint = apiBase ? `${apiBase}/api/subscribe` : '';
   window.addEventListener('hashchange', () => {
     if (window.location.hash !== '#suscribete') return;
     openSubscribeDialog();
-  });
+  }, { signal });
 
   // --- Formulario ---------------------------------------------------------
   const form = document.querySelector('form.subscribe-form');
@@ -371,6 +388,8 @@ const endpoint = apiBase ? `${apiBase}/api/subscribe` : '';
         mostrar('No se pudo completar la suscripción. Inténtalo de nuevo más tarde.', 'error');
       } finally {
         if (button) button.disabled = false;
+      }
+    });
       }
     });
   }

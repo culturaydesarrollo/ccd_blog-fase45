@@ -95,93 +95,104 @@ const UMBRAL_LECTURAS = 10; // «lecturas» visibles desde 10
 </style>
 
 <script>
-  const seccion = document.querySelector<HTMLElement>('.article-metrics[data-api]');
-  const api = seccion?.dataset.api;
+  // Con <ClientRouter /> el módulo corre una vez: init por astro:page-load
+  // (async por el await de las estadísticas). El bind de window scroll lleva
+  // la señal del AbortController para no acumularse entre navegaciones.
+  let metCtrl: AbortController | undefined;
 
-  if (seccion && api) {
-    const slug = api.slice(api.lastIndexOf('/') + 1);
-    const boton = seccion.querySelector<HTMLButtonElement>('[data-like]');
-    const etiqueta = seccion.querySelector<HTMLElement>('.like-label');
-    const likesEl = seccion.querySelector<HTMLElement>('[data-likes]');
-    const lecturasEl = seccion.querySelector<HTMLElement>('[data-lecturas]');
-    const cajaLecturas = seccion.querySelector<HTMLElement>('[data-reads]');
-    const umbralLikes = Number(seccion.dataset.umbralLikes ?? '3');
-    const umbralLecturas = Number(seccion.dataset.umbralLecturas ?? '10');
-    const likedKey = `ccd-liked-${slug}`;
-    const readKey = `ccd-read-${slug}`;
+  document.addEventListener('astro:page-load', async () => {
+    metCtrl?.abort();
+    metCtrl = new AbortController();
+    const signal = metCtrl.signal;
 
-    const traerStats = async () => {
-      const res = await fetch(`${api}/stats`);
-      if (!res.ok) throw new Error(`API ${res.status}`);
-      return (await res.json()) as {
-        visitas: number;
-        lecturas: number;
-        likes: number;
-      };
-    };
+    const seccion = document.querySelector<HTMLElement>('.article-metrics[data-api]');
+    const api = seccion?.dataset.api;
 
-    // Las cifras públicas solo se muestran al superar su umbral (opción A);
-    // por debajo el botón sigue funcionando y el lector ve «Te gusta».
-    // La medición y el panel no dependen de esta visibilidad.
-    const pintarLikes = (n: number) => {
-      if (!likesEl) return;
-      const visible = n >= umbralLikes;
-      likesEl.textContent = visible ? String(n) : '';
-      likesEl.hidden = !visible;
-    };
-    const pintarLecturas = (n: number) => {
-      if (lecturasEl) lecturasEl.textContent = String(n);
-      if (cajaLecturas) cajaLecturas.hidden = n < umbralLecturas;
-    };
+    if (seccion && api) {
+      const slug = api.slice(api.lastIndexOf('/') + 1);
+      const boton = seccion.querySelector<HTMLButtonElement>('[data-like]');
+      const etiqueta = seccion.querySelector<HTMLElement>('.like-label');
+      const likesEl = seccion.querySelector<HTMLElement>('[data-likes]');
+      const lecturasEl = seccion.querySelector<HTMLElement>('[data-lecturas]');
+      const cajaLecturas = seccion.querySelector<HTMLElement>('[data-reads]');
+      const umbralLikes = Number(seccion.dataset.umbralLikes ?? '3');
+      const umbralLecturas = Number(seccion.dataset.umbralLecturas ?? '10');
+      const likedKey = `ccd-liked-${slug}`;
+      const readKey = `ccd-read-${slug}`;
 
-    // Estado inicial (conteos + si ya se dio like en este navegador).
-    try {
-      const stats = await traerStats();
-      pintarLikes(stats.likes);
-      pintarLecturas(stats.lecturas);
-    } catch {
-      // Sin API o sin red: los puntos suspensivos quedan como está.
-    }
-
-    if (localStorage.getItem(likedKey)) {
-      boton?.classList.add('liked');
-      boton?.setAttribute('disabled', '');
-      if (etiqueta) etiqueta.textContent = 'Te gusta';
-    }
-
-    // Visita: una por cada carga de página.
-    fetch(`${api}/view`, { method: 'POST', keepalive: true }).catch(() => {});
-
-    // Lectura: ≥75 % de la página, una vez por sesión.
-    const marcarLectura = () => {
-      if (sessionStorage.getItem(readKey)) return;
-      const umbral = document.documentElement.scrollHeight * 0.75;
-      if (window.scrollY + window.innerHeight < umbral) return;
-      sessionStorage.setItem(readKey, '1');
-      window.removeEventListener('scroll', marcarLectura);
-      fetch(`${api}/read`, { method: 'POST', keepalive: true })
-        .then(() => traerStats())
-        .then((stats) => pintarLecturas(stats.lecturas))
-        .catch(() => {});
-    };
-    window.addEventListener('scroll', marcarLectura, { passive: true });
-    marcarLectura();
-
-    // Like: uno por navegador.
-    boton?.addEventListener('click', async () => {
-      if (localStorage.getItem(likedKey) || boton.disabled) return;
-      boton.disabled = true;
-      try {
-        const res = await fetch(`${api}/like`, { method: 'POST' });
+      const traerStats = async () => {
+        const res = await fetch(`${api}/stats`);
         if (!res.ok) throw new Error(`API ${res.status}`);
-        const data = (await res.json()) as { likes: number };
-        localStorage.setItem(likedKey, '1');
-        boton.classList.add('liked');
-        if (etiqueta) etiqueta.textContent = 'Te gusta';
-        pintarLikes(data.likes);
+        return (await res.json()) as {
+          visitas: number;
+          lecturas: number;
+          likes: number;
+        };
+      };
+
+      // Las cifras públicas solo se muestran al superar su umbral (opción A);
+      // por debajo el botón sigue funcionando y el lector ve «Te gusta».
+      // La medición y el panel no dependen de esta visibilidad.
+      const pintarLikes = (n: number) => {
+        if (!likesEl) return;
+        const visible = n >= umbralLikes;
+        likesEl.textContent = visible ? String(n) : '';
+        likesEl.hidden = !visible;
+      };
+      const pintarLecturas = (n: number) => {
+        if (lecturasEl) lecturasEl.textContent = String(n);
+        if (cajaLecturas) cajaLecturas.hidden = n < umbralLecturas;
+      };
+
+      // Estado inicial (conteos + si ya se dio like en este navegador).
+      try {
+        const stats = await traerStats();
+        pintarLikes(stats.likes);
+        pintarLecturas(stats.lecturas);
       } catch {
-        boton.disabled = false;
+        // Sin API o sin red: los puntos suspensivos quedan como está.
       }
-    });
-  }
+
+      if (localStorage.getItem(likedKey)) {
+        boton?.classList.add('liked');
+        boton?.setAttribute('disabled', '');
+        if (etiqueta) etiqueta.textContent = 'Te gusta';
+      }
+
+      // Visita: una por cada carga de página.
+      fetch(`${api}/view`, { method: 'POST', keepalive: true }).catch(() => {});
+
+      // Lectura: ≥75 % de la página, una vez por sesión.
+      const marcarLectura = () => {
+        if (sessionStorage.getItem(readKey)) return;
+        const umbral = document.documentElement.scrollHeight * 0.75;
+        if (window.scrollY + window.innerHeight < umbral) return;
+        sessionStorage.setItem(readKey, '1');
+        window.removeEventListener('scroll', marcarLectura);
+        fetch(`${api}/read`, { method: 'POST', keepalive: true })
+          .then(() => traerStats())
+          .then((stats) => pintarLecturas(stats.lecturas))
+          .catch(() => {});
+      };
+      window.addEventListener('scroll', marcarLectura, { passive: true, signal });
+      marcarLectura();
+
+      // Like: uno por navegador.
+      boton?.addEventListener('click', async () => {
+        if (localStorage.getItem(likedKey) || boton.disabled) return;
+        boton.disabled = true;
+        try {
+          const res = await fetch(`${api}/like`, { method: 'POST' });
+          if (!res.ok) throw new Error(`API ${res.status}`);
+          const data = (await res.json()) as { likes: number };
+          localStorage.setItem(likedKey, '1');
+          boton.classList.add('liked');
+          if (etiqueta) etiqueta.textContent = 'Te gusta';
+          pintarLikes(data.likes);
+        } catch {
+          boton.disabled = false;
+        }
+      });
+    }
+  });
 </script>

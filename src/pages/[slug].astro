@@ -905,6 +905,25 @@ const breadcrumbSchema = {
 
     {/* SCRIPT CON COMILLAS INVERTIDAS DE JAVASCRIPT */}
     <script is:inline>
+        /*
+         * Con <ClientRouter /> este inline puede re-ejecutarse al navegar, así
+         * que el guard window.__ccdSlugEvitaDoble evita registrar dos veces el
+         * ancla, y todo el init corre dentro de astro:page-load (que también se
+         * dispara en la carga inicial). Allí se re-captura el DOM nuevo (las
+         * estrellas, el compartir y los modales cambian con el swap). Los binds
+         * a document/window (load, keydown) llevan la señal del AbortController
+         * de la tanda para no acumularse; los de elementos no, porque el DOM
+         * viejo se descarta entero.
+         */
+        if (!window.__ccdSlugEvitaDoble) {
+            window.__ccdSlugEvitaDoble = true;
+            let slugCtrl = new AbortController();
+
+            document.addEventListener('astro:page-load', () => {
+                slugCtrl.abort();
+                slugCtrl = new AbortController();
+                const signal = slugCtrl.signal;
+
         const articleId = document.getElementById('current-post-data')?.dataset.id || 'article';
         const ratingSummary = document.getElementById('rating-summary');
         const ratingNote = document.getElementById('rating-note');
@@ -965,7 +984,7 @@ const breadcrumbSchema = {
 
         applySavedRating();
         // El formulario se resetea en window load y borraría el hidden de valoración: re-aplicar después.
-        window.addEventListener('load', applySavedRating);
+        window.addEventListener('load', applySavedRating, { signal });
 
         stars.forEach((star) => {
             star.addEventListener('click', () => {
@@ -1142,31 +1161,36 @@ const breadcrumbSchema = {
             if (event.target === rightsModal) rightsModal.close();
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // El «history-box» ya no se ancla a DOMContentLoaded: dentro de
+        // astro:page-load el evento ya ocurrió. Corre directo en cada visita
+        // (también en la carga inicial) y guarda el post actual.
+        {
             const currentEl = document.getElementById('current-post-data');
-            if (!currentEl) return;
-            
-            const currentId = currentEl.getAttribute('data-id');
-            const currentTitle = currentEl.getAttribute('data-title');
-            const previousPost = JSON.parse(localStorage.getItem('last_visited_post'));
+            if (currentEl) {
+                const currentId = currentEl.getAttribute('data-id');
+                const currentTitle = currentEl.getAttribute('data-title');
+                const previousPost = JSON.parse(localStorage.getItem('last_visited_post'));
 
-            if (previousPost && previousPost.id !== currentId) {
-                const historyBox = document.getElementById('history-box');
-                const historyLink = document.getElementById('history-link');
-                const historyTitle = document.getElementById('history-title');
+                if (previousPost && previousPost.id !== currentId) {
+                    const historyBox = document.getElementById('history-box');
+                    const historyLink = document.getElementById('history-link');
+                    const historyTitle = document.getElementById('history-title');
 
-                if (historyBox && historyLink && historyTitle) {
-                   historyTitle.innerText = previousPost.title;
-                   historyLink.href = `/${previousPost.id}/`;
-                   historyBox.style.display = 'block';
+                    if (historyBox && historyLink && historyTitle) {
+                       historyTitle.innerText = previousPost.title;
+                       historyLink.href = `/${previousPost.id}/`;
+                       historyBox.style.display = 'block';
+                    }
                 }
-             }
-            
-            localStorage.setItem('last_visited_post', JSON.stringify({
-                id: currentId,
-                title: currentTitle
-            }));
-        });
+
+                localStorage.setItem('last_visited_post', JSON.stringify({
+                    id: currentId,
+                    title: currentTitle
+                }));
+            }
+        }
+            }); // fin de astro:page-load
+        } // fin del guard __ccdSlugEvitaDoble
     </script>
 
     <BackToTop slot="after-footer" />
