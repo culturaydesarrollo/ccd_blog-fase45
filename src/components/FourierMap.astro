@@ -31,25 +31,26 @@
         min="0"
         max="1000"
         step="1"
-        value="768"
+        value="750"
         list="fourier-octavas"
         aria-valuemin="1"
         aria-valuemax="350"
-        aria-valuenow="90"
-        aria-valuetext="90 términos"
+        aria-valuenow="19"
+        aria-valuetext="19 términos"
       />
-      <output class="fourier-k" for="fourier-terminos">90 / 350</output>
+      <output class="fourier-k" for="fourier-terminos">19 / 350</output>
+      <span class="fourier-habitantes" aria-hidden="true"></span>
     </label>
     <datalist id="fourier-octavas">
       <option value="0"></option>
-      <option value="118"></option>
-      <option value="237"></option>
-      <option value="355"></option>
-      <option value="473"></option>
-      <option value="592"></option>
-      <option value="710"></option>
-      <option value="828"></option>
-      <option value="947"></option>
+      <option value="410"></option>
+      <option value="547"></option>
+      <option value="649"></option>
+      <option value="731"></option>
+      <option value="803"></option>
+      <option value="867"></option>
+      <option value="924"></option>
+      <option value="977"></option>
       <option value="1000"></option>
     </datalist>
     <p class="fourier-error">
@@ -60,9 +61,12 @@
 
   <figcaption>
     Serie de Fourier sobre el contorno continental de Colombia (Natural
-    Earth, dominio público). El cursor avanza en escala logarítmica —a mitad de
-    recorrido, 19 términos; al final, 350— y el error se mide contra la curva
-    base por la identidad de Parseval.
+    Earth, dominio público). El cursor es exigente: a tres cuartos de su
+    recorrido se llevan apenas 19 términos y hace falta llegar al final —los
+    350— para el trazo completo. Cada término representa 150.559,86
+    habitantes: la población colombiana (52.695.952) repartida entre los 350
+    términos posibles. El error se mide contra la curva base por la
+    identidad de Parseval.
   </figcaption>
 </figure>
 
@@ -115,10 +119,58 @@
   }
 
   .fourier-control input[type='range'] {
-    accent-color: var(--color-secondary);
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
     flex: 1;
-    height: 1.5rem;
+    height: 1.75rem;
     min-width: 110px;
+  }
+
+  /* Pista: riel tenue; el acento lo pone el pulgar */
+  .fourier-control input[type='range']::-webkit-slider-runnable-track {
+    background: var(--color-border);
+    border-radius: 999px;
+    height: 4px;
+  }
+  .fourier-control input[type='range']::-moz-range-track {
+    background: var(--color-border);
+    border-radius: 999px;
+    height: 4px;
+  }
+
+  /* Pulgar: figura humana (quien avanza la serie), no un botón */
+  .fourier-control input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: var(--color-secondary);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 4.5a2 2 0 1 0-2-2 2 2 0 0 0 2 2Zm-3.5 16.9-1-4.4 2.4-2.5v-3l-3 1.6-1-1.8 4.1-2.8a2 2 0 0 1 2.6.6l2 3h2.4v2h-1.7l-1.4 5.6a2 2 0 0 1-3.9.6Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 4.5a2 2 0 1 0-2-2 2 2 0 0 0 2 2Zm-3.5 16.9-1-4.4 2.4-2.5v-3l-3 1.6-1-1.8 4.1-2.8a2 2 0 0 1 2.6.6l2 3h2.4v2h-1.7l-1.4 5.6a2 2 0 0 1-3.9.6Z'/%3E%3C/svg%3E");
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    border-radius: 0;
+    height: 26px;
+    margin-top: -11px;
+    width: 26px;
+  }
+  .fourier-control input[type='range']::-moz-range-thumb {
+    background-color: var(--color-secondary);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 4.5a2 2 0 1 0-2-2 2 2 0 0 0 2 2Zm-3.5 16.9-1-4.4 2.4-2.5v-3l-3 1.6-1-1.8 4.1-2.8a2 2 0 0 1 2.6.6l2 3h2.4v2h-1.7l-1.4 5.6a2 2 0 0 1-3.9.6Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 4.5a2 2 0 1 0-2-2 2 2 0 0 0 2 2Zm-3.5 16.9-1-4.4 2.4-2.5v-3l-3 1.6-1-1.8 4.1-2.8a2 2 0 0 1 2.6.6l2 3h2.4v2h-1.7l-1.4 5.6a2 2 0 0 1-3.9.6Z'/%3E%3C/svg%3E");
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    border: 0;
+    border-radius: 0;
+    height: 26px;
+    width: 26px;
   }
 
   .fourier-k {
@@ -127,6 +179,13 @@
     font-weight: 700;
     min-width: 9ch;
     text-align: right;
+  }
+
+  .fourier-habitantes {
+    color: var(--color-secondary);
+    flex-basis: 100%;
+    font-variant-numeric: tabular-nums;
+    margin-left: auto;
   }
 
   .fourier-error {
@@ -158,10 +217,11 @@
   const lienzo = raiz?.querySelector<HTMLCanvasElement>('canvas');
   const slider = raiz?.querySelector<HTMLInputElement>('input[type="range"]');
   const salidaK = raiz?.querySelector<HTMLElement>('.fourier-k');
+  const salidaHabitantes = raiz?.querySelector<HTMLElement>('.fourier-habitantes');
   const salidaErr = raiz?.querySelector<HTMLElement>('.fourier-error-valor');
   const ctx = lienzo?.getContext('2d');
 
-  if (raiz && lienzo && slider && salidaK && salidaErr && ctx) {
+  if (raiz && lienzo && slider && salidaK && salidaHabitantes && salidaErr && ctx) {
     const N = COLOMBIA_N;
     const KMAX = N / 2;
     const estatico = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -252,23 +312,43 @@
     }
 
     // --- Términos activos: indices con |k| <= K, ordenados por energía ---
-    // Recorrido del cursor logarítmico: 350^(p/1000). Cada octava de términos
-    // (1→2→4→…→350) ocupa el mismo tramo de cursor; al 50 %, K≈19.
+    // Recorrido del cursor 350^(x^EXPO), exigente a propósito: a tres
+    // cuartos de recorrido (p=750) K≈19 —el punto donde el croquis ya se
+    // reconoce— y solo el tramo final da los 350 términos completos.
+    // EXPO se eligió tal que 0.75^EXPO = ln(19)/ln(350).
+    const EXPO = 2.39;
     function terminosDePosicion(p: number): number {
-      return Math.max(1, Math.round(350 ** (p / 1000)));
+      const x = Math.min(1, Math.max(0, p / 1000));
+      return Math.max(1, Math.round(350 ** (x ** EXPO)));
     }
-    let K = terminosDePosicion(Number(slider.value));
+    function posicionDe(K: number): number {
+      return Math.round(1000 * (Math.log(K) / Math.log(350)) ** (1 / EXPO));
+    }
+    // Cada visita arranca en un lugar distinto de la serie (15..99 términos)
+    const K_INICIAL = 15 + Math.floor(Math.random() * 85);
+    slider.value = String(posicionDe(K_INICIAL));
+    let K = K_INICIAL;
     let idxs: number[] = [];
+
+    // Términos expresados en habitantes: la población de Colombia
+    // (52.695.952) repartida entre los 350 términos posibles.
+    const HAB_X_TERMINO = 52695952 / 350;
+    const fmtHab = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 
     function ordenar() {
       idxs = [];
       for (let k = -K; k <= K; k++) idxs.push(k + KMAX);
       idxs.sort((a, b) => (cre[b] ** 2 + cim[b] ** 2) - (cre[a] ** 2 + cim[a] ** 2));
+      const habitantes = fmtHab.format(Math.round(K * HAB_X_TERMINO));
       salidaK.textContent = `${K} / 350`;
+      salidaHabitantes.textContent = `≈ ${habitantes} habitantes`;
       salidaErr.textContent = listo ? formatear(errorDe(K)) : '…';
-      // El slider guarda la posición log; teclado y lectores anuncian los términos
+      // El slider guarda la posición del cursor; teclado y lectores anuncian términos
       slider.setAttribute('aria-valuenow', String(K));
-      slider.setAttribute('aria-valuetext', K === 1 ? '1 término' : `${K} términos`);
+      slider.setAttribute(
+        'aria-valuetext',
+        `${K === 1 ? '1 término' : `${K} términos`}, equivalen a ${habitantes} habitantes`
+      );
     }
 
     function formatear(v: number): string {
@@ -421,9 +501,8 @@
       if (estatico && listo) pintarEstatico();
     });
 
-    // Teclado: cada pulsación da una octava (dobla o mitad los términos), la
+    // Teclado: cada pulsación dobla o mitad los términos (una octava), la
     // misma distancia que separa las marcas del datalist. El techo es 350.
-    const OCTAVA = Math.round((Math.log(2) / Math.log(350)) * 1000); // 118
     slider.addEventListener('keydown', (e) => {
       const dir =
         e.key === 'ArrowRight' || e.key === 'ArrowUp'
@@ -433,8 +512,8 @@
             : 0;
       if (dir === 0) return;
       e.preventDefault();
-      const p = Math.min(1000, Math.max(0, Number(slider.value) + dir * OCTAVA));
-      slider.value = String(p);
+      const nuevo = Math.min(350, Math.max(1, Math.round(K * (dir === 1 ? 2 : 0.5))));
+      slider.value = String(posicionDe(nuevo));
       slider.dispatchEvent(new Event('input'));
     });
 
