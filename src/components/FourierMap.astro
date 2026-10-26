@@ -267,6 +267,38 @@
     return Math.sqrt(prefijo[KMAX - K] + sufijo[KMAX + K]) * 100;
   }
 
+  // --- Segunda serie: el Tolima ---
+  // Su propio contorno entra en el MISMO marco normalizado que Colombia, así
+  // que comparte centro y escala. El parámetro se expresa con el N de
+  // Colombia (t va 0..N en ambos): al sustituir u = t*N2/N en la serie del
+  // Tolima el ángulo es 2πkt/N — idéntico al de Colombia—, de modo que las
+  // dos cadenas cierran su ciclo en el mismo instante sin coordinar nada.
+  const N2 = TOLIMA_N;
+  const KMAX2 = N2 / 2;
+  const cre2 = new Float64Array(N2 + 1);
+  const cim2 = new Float64Array(N2 + 1);
+  let listo2 = false;
+
+  function calcularDftTolima() {
+    if (listo2) return;
+    for (let k = -KMAX2; k <= KMAX2; k++) {
+      let sr = 0, si = 0, wr = 1, wi = 0;
+      const paso = (-2 * Math.PI * k) / N2;
+      const cr = Math.cos(paso), ci = Math.sin(paso);
+      for (let j = 0; j < N2; j++) {
+        const xr = TOLIMA[j * 2], xi = TOLIMA[j * 2 + 1];
+        sr += xr * wr - xi * wi;
+        si += xr * wi + xi * wr;
+        const nr = wr * cr - wi * ci;
+        wi = wr * ci + wi * cr;
+        wr = nr;
+      }
+      cre2[k + KMAX2] = sr / N2;
+      cim2[k + KMAX2] = si / N2;
+    }
+    listo2 = true;
+  }
+
   // --- Términos activos: indices con |k| <= K, ordenados por energía ---
   // El slider representa el porcentaje de la serie (1..100) de forma lineal
   // y proporcional al valor que dibuja: 50 % son 175 de los 350 términos y
@@ -397,6 +429,8 @@
     slider.value = String(posicionDe(K_INICIAL));
     let K = K_INICIAL;
     let idxs: number[] = [];
+    // Términos activos del Tolima: mismo porcentaje de su propia serie
+    let idxs2: number[] = [];
 
     // El reporte de habitantes se pinta en la esquina inferior derecha del
     // lienzo (ver pintarReporte); la cifra se arma en ordenar().
@@ -406,6 +440,12 @@
       idxs = [];
       for (let k = -K; k <= K; k++) idxs.push(k + KMAX);
       idxs.sort((a, b) => (cre[b] ** 2 + cim[b] ** 2) - (cre[a] ** 2 + cim[a] ** 2));
+      // El Tolima lleva el mismo porcentaje de SU serie (KMAX2 = 200 términos):
+      // al 100 % dibuja los 200 completos, igual que Colombia sus 350.
+      idxs2 = [];
+      const K2 = Math.max(1, Math.min(KMAX2, Math.round((K / TERMINOS) * KMAX2)));
+      for (let k = -K2; k <= K2; k++) idxs2.push(k + KMAX2);
+      idxs2.sort((a, b) => (cre2[b] ** 2 + cim2[b] ** 2) - (cre2[a] ** 2 + cim2[a] ** 2));
       const habitantes = fmtHab.format(Math.round(K * HAB_X_TERMINO));
       salidaK.textContent = `${K} / 350`;
       reporte = `≈ ${habitantes} habitantes`;
@@ -427,8 +467,11 @@
     let esperaHasta = 0;
     const rastro = new Float64Array(N * 2);
     let rastroLen = 0;
+    // Rastro del Tolima: avanza al mismo ritmo que el de Colombia
+    const rastro2 = new Float64Array(N * 2);
+    let rastro2Len = 0;
 
-    function limpiarRastro() { rastroLen = 0; }
+    function limpiarRastro() { rastroLen = 0; rastro2Len = 0; }
 
     function cadena(t: number): [number, number] {
       // Recorre los términos activos y devuelve la punta; dibuja círculos y cadena
@@ -464,6 +507,48 @@
       return [x, y];
     }
 
+    // Cadena del Tolima: misma mecánica sobre su propia serie. El ángulo
+    // 2πkt/N usa el N de Colombia para que las dos cierren ciclo a la vez
+    // (ver nota en calcularDftTolima). Arranca en su propio centroide —no en
+    // el centro del lienzo— para que la cadena no cruce el país: el término
+    // DC (k=0) es el centroide y ya se posiciona en él. Sus círculos quedan
+    // agrupados sobre el departamento.
+    function cadena2(t: number): [number, number] {
+      const x0 = cx + cre2[KMAX2] * esc;
+      const y0 = cy - cim2[KMAX2] * esc;
+      let x = x0, y = y0;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      const circ = new Path2D();
+      let nCirc = 0;
+      for (let s = 0; s < idxs2.length; s++) {
+        const i = idxs2[s];
+        if (i === KMAX2) continue; // DC ya aplicado al punto de partida
+        const k = i - KMAX2;
+        const a = (2 * Math.PI * k * t) / N;
+        const c = Math.cos(a), sn = Math.sin(a);
+        const vx = cre2[i] * c - cim2[i] * sn;
+        const vy = cre2[i] * sn + cim2[i] * c;
+        const radio = Math.hypot(cre2[i], cim2[i]) * esc;
+        if (nCirc < 32 && radio > 0.5) {
+          circ.moveTo(x + radio, y);
+          circ.arc(x, y, radio, 0, Math.PI * 2);
+          nCirc++;
+        }
+        x += vx * esc;
+        y -= vy * esc;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = col.terracota;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.globalAlpha = 0.3;
+      ctx.stroke(circ);
+      ctx.globalAlpha = 1;
+      return [x, y];
+    }
+
     function pintarBase() {
       ctx.clearRect(0, 0, w, h);
       // Contorno real de referencia (Neblina tenue): contra él se lee el error
@@ -475,16 +560,17 @@
         ctx.stroke(guia);
         ctx.restore();
       }
-      // El Tolima, en su ubicación: relleno tenue de terracota y trazo más
-      // firme, para que se lea como el departamento destacado del país.
+      // El Tolima: el relleno tenue marca su ubicación dentro del país y una
+      // guía débil —como la de Colombia—, pero el trazo nítido lo pone la
+      // segunda serie al recorrerlo (ver cadena2).
       if (tolima) {
         ctx.save();
         ctx.fillStyle = col.terracota;
-        ctx.globalAlpha = 0.14;
+        ctx.globalAlpha = 0.12;
         ctx.fill(tolima);
-        ctx.globalAlpha = 0.85;
-        ctx.strokeStyle = col.terracota;
-        ctx.lineWidth = 1.4;
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = col.neblina;
+        ctx.lineWidth = 1;
         ctx.lineJoin = 'round';
         ctx.stroke(tolima);
         ctx.restore();
@@ -552,16 +638,64 @@
       return p;
     }
 
+    // Trazo completo del Tolima con sus propios términos (modo estático).
+    function trazoCompleto2(): Path2D {
+      const p = new Path2D();
+      for (let j = 0; j <= N; j++) {
+        const t = (2 * Math.PI * j) / N;
+        let x = 0, y = 0;
+        for (let s = 0; s < idxs2.length; s++) {
+          const i = idxs2[s];
+          const k = i - KMAX2;
+          const a = t * k;
+          const c = Math.cos(a), sn = Math.sin(a);
+          x += cre2[i] * c - cim2[i] * sn;
+          y += cre2[i] * sn + cim2[i] * c;
+        }
+        const px = cx + x * esc, py = cy - y * esc;
+        if (j === 0) p.moveTo(px, py); else p.lineTo(px, py);
+      }
+      return p;
+    }
+
+    // Rastro del Tolima: la pluma que avanza por el departamento, en terracota
+    // para distinguirla de la traza oscura de Colombia.
+    function pintarRastroTolima(puntaX: number, puntaY: number) {
+      if (rastro2Len > 2) {
+        ctx.beginPath();
+        ctx.moveTo(rastro2[0], rastro2[1]);
+        for (let i = 1; i < rastro2Len; i++) ctx.lineTo(rastro2[i * 2], rastro2[i * 2 + 1]);
+        ctx.strokeStyle = col.terracota;
+        ctx.lineWidth = 1.7;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(puntaX, puntaY, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = col.terracota;
+      ctx.fill();
+    }
+
     function pintarEstatico() {
       // Reduced-motion: cadena en reposo + el trazo entero, sin bucle
       pintarBase();
       const [px, py] = cadena(0);
+      const [px2, py2] = cadena2(0);
       ctx.strokeStyle = col.tinta;
       ctx.lineWidth = 1.6;
       ctx.lineJoin = 'round';
       ctx.stroke(trazoCompleto());
+      ctx.strokeStyle = col.terracota;
+      ctx.lineWidth = 1.7;
+      ctx.lineJoin = 'round';
+      ctx.stroke(trazoCompleto2());
       ctx.beginPath();
       ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = col.terracota;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(px2, py2, 2.5, 0, Math.PI * 2);
       ctx.fillStyle = col.terracota;
       ctx.fill();
       pintarReporte();
@@ -583,12 +717,20 @@
       }
 
       pintarBase();
+      // El Tolima se traza primero (por debajo) y luego Colombia encima
+      const [tx, ty] = cadena2(fase);
+      if (trazando) {
+        rastro2[rastro2Len * 2] = tx;
+        rastro2[rastro2Len * 2 + 1] = ty;
+        if (rastro2Len < N) rastro2Len++;
+      }
       const [px, py] = cadena(fase);
       if (trazando) {
         rastro[rastroLen * 2] = px;
         rastro[rastroLen * 2 + 1] = py;
         if (rastroLen < N) rastroLen++;
       }
+      pintarRastroTolima(tx, ty);
       pintarRastroYD(px, py);
       pintarReporte();
       raf = requestAnimationFrame(cuadro);
@@ -629,6 +771,7 @@
     // DFT diferido hasta que la pieza se vea (no penaliza la carga de la página)
     function preparar() {
       calcularDft();
+      calcularDftTolima();
       ordenar();
       medir();
       if (estatico) pintarEstatico(); else arrancar();
