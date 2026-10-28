@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": {
+    "typescript": {
+      "command": ["node", "node_modules/typescript-language-server/lib/cli.mjs", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"],
+      "initialization": {
+        "tsserver": { "path": "node_modules/typescript5/lib/tsserver.js" }
+      }
+    },
+    "astro": {
+      "command": ["node", "node_modules/@astrojs/language-server/bin/nodeServer.js", "--stdio"],
+      "extensions": [".astro"],
+      "initialization": {
+        "typescript": { "tsdk": "node_modules/typescript5/lib" }
+      }
+    }
+  }
+}
