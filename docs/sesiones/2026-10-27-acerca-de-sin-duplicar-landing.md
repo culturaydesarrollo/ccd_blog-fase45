@@ -32,5 +32,6 @@ cmd /c npm run validate                            # 111 páginas
 cmd /c npx impeccable detect --no-advisory dist    # 137 (antes 138)
 ```
 En vivo: encabezados finales `Qué es este blog`, `Qué encontrarás`, `Participa`,
-`Detrás del blog`, `¡Mayor compromiso, mejor país!`; ninguna de las frases
-duplicadas aparece en el DOM; Fourier pinta y anima sin errores JS.
+`¡Mayor compromiso, mejor país!`, `Detrás del blog` (esta última va después del
+componente Fourier completo: lienzo, barra, estadísticas y leyenda); ninguna de
+las frases duplicadas aparece en el DOM; Fourier pinta y anima sin errores JS.
