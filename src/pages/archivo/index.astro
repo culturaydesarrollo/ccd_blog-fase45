@@ -5,7 +5,7 @@ import { formatDate } from '../../lib/formatDate';
 
 const posts = (await getCollection('blog', (entry) => !entry.data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-const years = [...new Set(posts.map((post) => post.data.pubDate.getFullYear()))].sort((a, b) => b - a);
+const years = [...new Set(posts.map((post) => post.data.pubDate.getUTCFullYear()))].sort((a, b) => b - a);
 const monthName = new Intl.DateTimeFormat('es-CO', { month: 'long' });
 ---
 
@@ -19,10 +19,10 @@ const monthName = new Intl.DateTimeFormat('es-CO', { month: 'long' });
     <div class="year-grid">
       {years.map((year) => (
         <section class="year-group">
-          <a class="year-card" href={`/archivo/${year}/`}><strong>{year}</strong><span>{posts.filter((post) => post.data.pubDate.getFullYear() === year).length} publicaciones</span></a>
+          <a class="year-card" href={`/archivo/${year}/`}><strong>{year}</strong><span>{posts.filter((post) => post.data.pubDate.getUTCFullYear() === year).length} publicaciones</span></a>
           <div class="month-list">
-            {[...new Set(posts.filter((post) => post.data.pubDate.getFullYear() === year).map((post) => post.data.pubDate.getMonth()))].sort((a, b) => b - a).map((month) => {
-              const count = posts.filter((post) => post.data.pubDate.getFullYear() === year && post.data.pubDate.getMonth() === month).length;
+            {[...new Set(posts.filter((post) => post.data.pubDate.getUTCFullYear() === year).map((post) => post.data.pubDate.getUTCMonth()))].sort((a, b) => b - a).map((month) => {
+              const count = posts.filter((post) => post.data.pubDate.getUTCFullYear() === year && post.data.pubDate.getUTCMonth() === month).length;
               return <a href={`/archivo/${year}/${String(month + 1).padStart(2, '0')}/`}>{monthName.format(new Date(year, month, 1))} <span>{count}</span></a>;
             })}
           </div>

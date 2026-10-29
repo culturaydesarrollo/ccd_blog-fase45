@@ -6,14 +6,14 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', (entry) => !entry.data.draft);
-  const years = [...new Set(posts.map((post) => post.data.pubDate.getFullYear()))];
-  return years.map((year) => ({ params: { year: String(year) }, props: { posts: posts.filter((post) => post.data.pubDate.getFullYear() === year).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()) } }));
+  const years = [...new Set(posts.map((post) => post.data.pubDate.getUTCFullYear()))];
+  return years.map((year) => ({ params: { year: String(year) }, props: { posts: posts.filter((post) => post.data.pubDate.getUTCFullYear() === year).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()) } }));
 }
 
 const { year } = Astro.params;
 const { posts } = Astro.props;
 const monthName = new Intl.DateTimeFormat('es-CO', { month: 'long' });
-const months = [...new Set(posts.map((post) => post.data.pubDate.getMonth()))].sort((a, b) => b - a);
+const months = [...new Set(posts.map((post) => post.data.pubDate.getUTCMonth()))].sort((a, b) => b - a);
 ---
 
 <Layout title={`Archivo ${year} | Blog Cultura y Desarrollo`} description={`Artículos publicados en ${year}.`}>
@@ -25,7 +25,7 @@ const months = [...new Set(posts.map((post) => post.data.pubDate.getMonth()))].s
       <p>{posts.length} publicaciones de este año.</p>
     </header>
     <div class="month-list archive-months">
-      {months.map((month) => <a href={`/archivo/${year}/${String(month + 1).padStart(2, '0')}/`}>{monthName.format(new Date(Number(year), month, 1))} <span>{posts.filter((post) => post.data.pubDate.getMonth() === month).length}</span></a>)}
+      {months.map((month) => <a href={`/archivo/${year}/${String(month + 1).padStart(2, '0')}/`}>{monthName.format(new Date(Number(year), month, 1))} <span>{posts.filter((post) => post.data.pubDate.getUTCMonth() === month).length}</span></a>)}
     </div>
   </div>
 </Layout>

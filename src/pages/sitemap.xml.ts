@@ -16,8 +16,8 @@ export const GET: APIRoute = async ({ site }) => {
     '/autores/',
     '/archivo/',
     ...posts.flatMap((post: (typeof posts)[number]) => [
-      `/archivo/${post.data.pubDate.getFullYear()}/`,
-      `/archivo/${post.data.pubDate.getFullYear()}/${String(post.data.pubDate.getMonth() + 1).padStart(2, '0')}/`,
+      `/archivo/${post.data.pubDate.getUTCFullYear()}/`,
+      `/archivo/${post.data.pubDate.getUTCFullYear()}/${String(post.data.pubDate.getUTCMonth() + 1).padStart(2, '0')}/`,
     ]),
     ...categories.map((category: string) => `/categorias/${category.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/`),
     ...tags.map((tag: string) => `/tags/${tag.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/`),

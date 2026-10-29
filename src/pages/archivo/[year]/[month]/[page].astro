@@ -9,7 +9,7 @@ export async function getStaticPaths() {
   const posts = await getCollection('blog', (entry) => !entry.data.draft);
   const groups = new Map<string, typeof posts>();
   for (const post of posts) {
-    const key = `${post.data.pubDate.getFullYear()}-${String(post.data.pubDate.getMonth() + 1).padStart(2, '0')}`;
+    const key = `${post.data.pubDate.getUTCFullYear()}-${String(post.data.pubDate.getUTCMonth() + 1).padStart(2, '0')}`;
     groups.set(key, [...(groups.get(key) ?? []), post]);
   }
   return [...groups.entries()].flatMap(([key, grouped]) => {
