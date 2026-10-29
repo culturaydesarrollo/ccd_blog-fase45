@@ -1156,3 +1156,121 @@ h1, h2, h3, h4 {
   height: 2.75rem;
   width: 2.75rem;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Tabla comparativa dentro del artículo (sustituye al SVG de la tabla)
+   Semántica: <caption>, <th scope="col"> y <th scope="row">. En pantallas
+   estrechas la tabla se apila en tarjetas y las etiquetas de columna se
+   repiten en cada celda; el <thead> se oculta para no duplicar la lectura.
+   ════════════════════════════════════════════════════════════════════ */
+
+.article-content .tabla-comparativa {
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 1.75rem 0 2rem;
+  width: 100%;
+}
+
+.article-content .tabla-comparativa caption {
+  caption-side: bottom;
+  color: var(--color-muted);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  padding-top: 0.65rem;
+  text-align: left;
+}
+
+.article-content .tabla-comparativa :is(th, td) {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.8rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-content .tabla-comparativa thead th {
+  background: var(--color-bg-alt);
+  border-bottom: 2px solid var(--color-border);
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.article-content .tabla-comparativa tbody th {
+  color: var(--color-primary);
+  font-weight: 600;
+  width: 26%;
+}
+
+.article-content .tabla-comparativa tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+/* La etiqueta solo aparece en la versión apilada */
+.article-content .tabla-comparativa .celda-etiqueta {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .article-content .tabla-comparativa {
+    border-collapse: separate;
+    display: block;
+    font-size: 1rem;
+  }
+
+  /* Las etiquetas de columna viajan a cada celda */
+  .article-content .tabla-comparativa thead {
+    display: none;
+  }
+
+  .article-content .tabla-comparativa tbody,
+  .article-content .tabla-comparativa tr {
+    display: block;
+  }
+
+  .article-content .tabla-comparativa tbody tr {
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    margin-bottom: 0.9rem;
+    padding: 0 0.95rem;
+  }
+
+  .article-content .tabla-comparativa tbody th {
+    border-bottom: 1px solid var(--color-border);
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    margin: 0 -0.95rem;
+    padding: 0.75rem 0.95rem;
+    width: auto;
+  }
+
+  .article-content .tabla-comparativa tbody td {
+    border-bottom: 0;
+    display: block;
+    padding: 0.7rem 0 0;
+  }
+
+  .article-content .tabla-comparativa tbody tr > :last-child {
+    padding-bottom: 0.85rem;
+  }
+
+  .article-content .tabla-comparativa .celda-etiqueta {
+    color: var(--color-muted);
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+    text-transform: uppercase;
+  }
+
+  .article-content .tabla-comparativa caption {
+    display: block;
+    padding-top: 0;
+  }
+}
