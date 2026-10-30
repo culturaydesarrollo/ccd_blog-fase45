@@ -13,6 +13,7 @@ const DIMENSIONS: Record<string, { width: number; height: number }> = {
   '/images/tabla-2.svg': { width: 1496, height: 690 },
   '/images/toque_de_cacho.webp': { width: 640, height: 838 },
   '/images/en_buenas_manos.webp': { width: 985, height: 761 },
+  '/images/image_21189308.jpg': { width: 1408, height: 768 },
 };
 
 export function imageDimensions(
