@@ -27,6 +27,9 @@ const autores = defineCollection({
     name: z.string(),
     slug: z.string().optional(),
     image: z.string().default('/images/author-default.svg'),
+    // Fecha de la última revisión del perfil. Se usa en el sitemap cuando el
+    // autor todavía no tiene artículos publicados.
+    updated: z.coerce.date().optional(),
   }),
 });
 

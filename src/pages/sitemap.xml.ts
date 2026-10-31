@@ -2,6 +2,7 @@ import { getCollection } from 'astro:content';
 import type { APIRoute } from 'astro';
 import { slugify } from '../lib/slugify';
 import { HOME_PAGE_SIZE, MONTH_PAGE_SIZE } from '../lib/pagination';
+import { LAST_UPDATED } from '../lib/staticPages';
 
 type SitemapEntry = { path: string; lastmod?: Date };
 
@@ -18,9 +19,15 @@ type BlogEntry = {
   };
 };
 
-type AuthorEntry = { id: string; data: { name: string; slug?: string } };
+type AuthorEntry = { id: string; data: { name: string; slug?: string; updated?: Date } };
 
 const normalize = (value?: string) => value?.trim().toLocaleLowerCase() ?? '';
+
+/** Fecha anotada a mano para las páginas fijas (formato `YYYY-MM-DD`). */
+const staticDate = (path: string) => {
+  const value = LAST_UPDATED[path];
+  return value ? new Date(`${value}T00:00:00Z`) : undefined;
+};
 
 /** Fecha que se publica como `lastmod`: la de creación si existe, si no la de publicación. */
 const postDate = (post: BlogEntry) => post.data.createdAt ?? post.data.pubDate;
@@ -43,7 +50,7 @@ export const GET: APIRoute = async ({ site }) => {
 
   // Portada y páginas de sección
   add('/', newestDate);
-  add('/acerca/');
+  add('/acerca/', staticDate('/acerca/'));
   add('/categorias/', newestDate);
   add('/tags/', newestDate);
   add('/autores/', newestDate);
@@ -52,13 +59,14 @@ export const GET: APIRoute = async ({ site }) => {
   // Artículos publicados
   posts.forEach((post) => add(`/${post.id}/`, postDate(post)));
 
-  // Perfiles de autoría: `lastmod` del artículo más reciente de cada autor
+  // Perfiles de autoría: `lastmod` del artículo más reciente o, si todavía no
+  // ha publicado, la fecha de revisión anotada en su perfil.
   authors.forEach((author) => {
     const identifiers = [author.id, author.data.slug, author.data.name].map(normalize).filter(Boolean);
     const newest = posts.find((post) =>
       [post.data.authorSlug, post.data.author].map(normalize).some((value) => value && identifiers.includes(value)),
     );
-    add(`/autores/${author.data.slug ?? author.id}/`, newest ? postDate(newest) : undefined);
+    add(`/autores/${author.data.slug ?? author.id}/`, newest ? postDate(newest) : author.data.updated);
   });
 
   // Paginación de la portada
