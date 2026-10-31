@@ -7,9 +7,10 @@ interface Props {
   publishedDate?: Date;
   image?: string;
   imageAlt?: string;
+  noindex?: boolean;
 }
 
-const { title, description, type = 'website', author, publishedDate, image, imageAlt } =
+const { title, description, type = 'website', author, publishedDate, image, imageAlt, noindex = false } =
   Astro.props;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
 const publishedTime = publishedDate?.toISOString();
@@ -27,6 +28,7 @@ const ogImageAlt = imageAlt ?? title;
 ---
 
 <link rel="canonical" href={canonicalUrl} />
+{noindex && <meta name="robots" content="noindex, follow" />}
 <meta name="description" content={description} />
 <meta property="og:locale" content="es_CO" />
 <meta property="og:type" content={type} />

@@ -13,9 +13,11 @@ interface Props {
 	publishedDate?: Date;
 	image?: string;
 	imageAlt?: string;
+	/** Evita que la página se indexe (por ejemplo, la 404). */
+	noindex?: boolean;
 }
 
-const { title, description, type = 'website', author, publishedDate, image, imageAlt } = Astro.props;
+const { title, description, type = 'website', author, publishedDate, image, imageAlt, noindex = false } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -32,6 +34,7 @@ const { title, description, type = 'website', author, publishedDate, image, imag
 			publishedDate={publishedDate}
 			image={image}
 			imageAlt={imageAlt}
+			noindex={noindex}
 		/>
 		<!--
 		  La verificación de Search Console se hace con el archivo

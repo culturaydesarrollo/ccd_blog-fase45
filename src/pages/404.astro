@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import { formatDate } from '../lib/formatDate';
+
+const title = 'Página no encontrada | Blog Cultura y Desarrollo';
+const description =
+  'La dirección que buscas no existe o cambió de lugar. Desde aquí puedes volver al inicio, al archivo o a los artículos más recientes.';
+
+const latest = (await getCollection('blog'))
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+---
+
+<Layout title={title} description={description} noindex>
+  <div class="blog-container archive-page">
+    <header class="page-heading">
+      <p class="eyebrow">Error 404</p>
+      <h1>Esta página no existe</h1>
+      <p>
+        La dirección que buscas no está disponible: puede haberse movido, haber
+        cambiado de nombre o no haber existido nunca.
+      </p>
+    </header>
+
+    <nav class="no-encontrada-rutas" aria-label="Rutas para seguir navegando">
+      <a href="/">Inicio</a>
+      <a href="/archivo/">Archivo por fecha</a>
+      <a href="/categorias/">Categorías</a>
+      <a href="/tags/">Etiquetas</a>
+      <a href="/autores/">Autores</a>
+    </nav>
+
+    {
+      latest.length > 0 && (
+        <section class="no-encontrada-recientes">
+          <h2>Lo último publicado</h2>
+          <ul>
+            {latest.map((post) => (
+              <li>
+                <a href={`/${post.id}/`}>{post.data.title}</a>
+                <time datetime={post.data.pubDate.toISOString()}>
+                  {formatDate(post.data.pubDate)}
+                </time>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </div>
+</Layout>
+
+<style>
+  .no-encontrada-rutas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin: 2rem 0 2.5rem;
+  }
+
+  .no-encontrada-rutas a {
+    border: 1px solid var(--color-border, #e4d7cf);
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+    text-decoration: none;
+  }
+
+  .no-encontrada-recientes h2 {
+    margin-bottom: 1rem;
+  }
+
+  .no-encontrada-recientes ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .no-encontrada-recientes li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .no-encontrada-recientes time {
+    font-size: 0.9rem;
+    opacity: 0.75;
+  }
+</style>
