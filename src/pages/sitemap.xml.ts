@@ -55,6 +55,7 @@ export const GET: APIRoute = async ({ site }) => {
   add('/tags/', newestDate);
   add('/autores/', newestDate);
   add('/archivo/', newestDate);
+  add('/visor/un-clavo/', staticDate('/visor/un-clavo/'));
 
   // Artículos publicados
   posts.forEach((post) => add(`/${post.id}/`, postDate(post)));

@@ -1,0 +1,940 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getEntry } from 'astro:content';
+import { formatDate } from '../../lib/formatDate';
+import { slugify } from '../../lib/slugify';
+
+const title = 'Un clavo... s.o.c. · visor 3D y realidad aumentada | Cultura y Desarrollo';
+const description =
+  'Escultura del artículo “Un clavo... s.o.c - Ficción plástica”, obra del año 1995, en tres dimensiones: gírala, acércala y colócala a escala real en tu espacio.';
+const imagen = '/images/visor-un-clavo-og.png';
+const ensayo = '/un-clavo-soc-ficcion-plastica/';
+
+// El visor reutiliza la cabecera de cualquier publicación: fecha, tiempo de
+// lectura y categoría salen del ensayo que acompaña a la obra.
+const articulo = await getEntry('blog', 'un-clavo-soc-ficcion-plastica');
+const autor = {
+  nombre: 'Rafael Dimitri Guzmán Camacho',
+  slug: 'rafael-dimitri-guzman-camacho',
+  imagen: '/images/dimitri_guzman.webp',
+};
+const fecha = articulo ? formatDate(articulo.data.pubDate) : '';
+const minutosLectura = articulo
+  ? Math.max(1, Math.ceil((articulo.body?.split(/\s+/).filter(Boolean).length ?? 0) / 200))
+  : 1;
+const categorias = articulo?.data.category ?? [];
+---
+
+<Layout
+  title={title}
+  description={description}
+  image={imagen}
+  imageAlt="Escultura Un clavo... s.o.c. renderizada en el visor 3D"
+>
+  <div class="blog-container visor-page">
+    <nav class="migas" aria-label="Migas de pan">
+      <a href={ensayo}>← Volver al ensayo</a>
+    </nav>
+
+    <header class="page-heading visor-head">
+      <p class="eyebrow">Visor 3D · realidad aumentada</p>
+      <h1>Un <em>clavo</em>... s.o.c.</h1>
+
+      <div class="meta-info">
+        <span class="meta-author">
+          <a
+            class="author-trigger"
+            href={`/autores/${autor.slug}/`}
+            aria-label={`Ver el perfil de ${autor.nombre}`}
+          >
+            <img src={autor.imagen} alt={`Foto de ${autor.nombre}`} width="44" height="44" />
+          </a>
+          <span>Por <a href={`/autores/${autor.slug}/`}><strong>{autor.nombre}</strong></a></span>
+          <a class="author-bio-trigger" href={`/autores/${autor.slug}/`}>ver bio</a>
+        </span>
+        <span class="meta-details">
+          <time>{fecha}</time>
+          <span class="meta-divider" aria-hidden="true">•</span>
+          <span>{minutosLectura} min de lectura</span>
+        </span>
+      </div>
+
+      <span class="post-category-list">
+        {categorias.map((categoria, index) => (
+          <span>
+            {index > 0 && <span aria-hidden="true"> / </span>}
+            <a class="post-category-item" href={`/categorias/${slugify(categoria)}/`}>{categoria}</a>
+          </span>
+        ))}
+      </span>
+
+      <p class="visor-resumen">
+        Escultura del artículo “Un clavo... s.o.c - Ficción plástica” obra del
+        año 1995, en tres dimensiones. Gírala, acércala y —si tu móvil lo
+        permite— colócala a escala real en tu espacio.
+      </p>
+    </header>
+
+    <section class="vitrina" id="vitrina" aria-label="Visor 3D de la escultura Un clavo... s.o.c.">
+      <div class="progreso" id="progreso" aria-hidden="true"><span></span></div>
+
+      <div class="estado" id="estado" data-state="load" role="status" aria-live="polite">
+        Cargando modelo…
+      </div>
+
+      <model-viewer
+        id="mv"
+        src="/models/unclavo_soc.glb"
+        alt="Escultura Un clavo... s.o.c.: un martillo de madera y acero atravesado por un clavo largo, sobre un bloque de madera."
+        camera-controls
+        touch-action="pan-y"
+        auto-rotate
+        rotation-per-second="16deg"
+        shadow-intensity="1.1"
+        shadow-softness="0.9"
+        exposure="0.95"
+        interaction-prompt="none"
+        camera-orbit="32deg 78deg auto"
+        camera-target="auto"
+        min-camera-orbit="auto auto 45%"
+        max-camera-orbit="auto auto 240%"
+        loading="eager"
+        reveal="auto"
+        ar
+        ar-modes="webxr scene-viewer"
+        ar-scale="fixed"
+        ar-placement="floor">
+        <div slot="poster" class="esqueleto"></div>
+      </model-viewer>
+
+      <div class="hint" id="hint">
+        Arrastra para girar · pellizca para acercar
+      </div>
+
+      <noscript>
+        <p class="sin-js">
+          El visor necesita JavaScript y WebGL. Puedes <a href={ensayo}>leer el ensayo</a> o ver la <a href="/video/Un-clavo-soc.mp4">grabación de la obra</a>.
+        </p>
+      </noscript>
+
+      <div class="flotantes">
+        <button class="icono" id="btnCompartir" type="button" aria-label="Compartir este visor">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 16V3m0 0L8 7m4-4 4 4"/></svg>
+        </button>
+        <button class="icono" id="btnPantalla" type="button" aria-label="Ver a pantalla completa">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <div class="barra" role="toolbar" aria-label="Controles del visor">
+      <button class="boton" id="btnRotar" type="button" aria-pressed="true">Auto-rotación</button>
+      <button class="boton" id="btnCentrar" type="button">Centrar</button>
+      <div class="zoom" role="group" aria-label="Zoom">
+        <button class="boton boton--cuadrado" id="btnAlejar" type="button" aria-label="Alejar">−</button>
+        <button class="boton boton--cuadrado" id="btnAcercar" type="button" aria-label="Acercar">+</button>
+      </div>
+      <button class="boton boton--oro" id="btnAR" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 3.6 7.2v9.6L12 21.2l8.4-4.4V7.2L12 2.8Z"/><path d="M3.6 7.2 12 11.6l8.4-4.4M12 11.6v9.6"/></svg>
+        Ver en tu espacio
+      </button>
+    </div>
+
+    <dl class="datos">
+      <div><dt>Archivo</dt><dd id="datoPeso">5,08 MB</dd></div>
+      <div><dt>Dimensiones (modelo)</dt><dd id="datoMedidas">—</dd></div>
+      <div><dt>Realidad aumentada</dt><dd id="datoAR">comprobando…</dd></div>
+      <div><dt>Formato</dt><dd>glTF binario</dd></div>
+    </dl>
+
+    <section class="notas">
+      <h2>Cómo se usa</h2>
+      <p>
+        La escena se recorre con el ratón o con el dedo: arrastra para orbitar,
+        pellizca o rueda para acercar. En el móvil, <strong>Ver en tu espacio</strong> abre la cámara y coloca la pieza sobre el suelo a escala 1:1, tal
+        como está registrada en el modelo: 0,94 × 0,99 × 0,54 m.
+      </p>
+      <p>
+        El visor funciona en los navegadores modernos de escritorio y de móvil:
+        Chrome, Safari, Firefox y Edge. Solo pide WebGL2, que todos tienen. La <strong>realidad aumentada</strong> sí tiene requisitos propios: en Android
+        necesita <strong>ARCore</strong> y Chrome, y en iPhone necesita el
+        archivo <code>.usdz</code> que abre Quick Look, que esta pieza todavía
+        no tiene.
+      </p>
+      <p class="notas-pie">
+        Modelo: <code>unclavo_soc.glb</code> · 5.084.748 bytes · visor <a href="https://modelviewer.dev" rel="noopener">model-viewer</a> 4.4 (Apache 2.0, autoalojado).
+      </p>
+      <p class="notas-pie-enlace"><a href={ensayo}>Leer el ensayo que acompaña la obra →</a></p>
+    </section>
+  </div>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
+
+  <script is:inline type="module" src="/vendor/model-viewer.min.js"></script>
+</Layout>
+
+<style>
+  .visor-page {
+    padding-bottom: 4rem;
+  }
+
+  .migas {
+    padding-top: 1.25rem;
+    font-size: 0.85rem;
+  }
+  .migas a {
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+  .migas a:hover {
+    color: var(--color-secondary);
+    text-decoration: underline;
+  }
+
+  .visor-head {
+    max-width: 70ch;
+    margin: 0.5rem 0 1.5rem;
+  }
+  .visor-head h1 em {
+    color: var(--color-secondary);
+    font-style: italic;
+  }
+
+  /* ---------- cabecera (misma estructura que cualquier publicación) ---------- */
+  .visor-head .meta-info {
+    align-items: center;
+    color: var(--color-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    justify-content: flex-start;
+    margin-bottom: 0.55rem;
+  }
+  .visor-head .meta-author {
+    align-items: center;
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 0.75rem;
+    white-space: nowrap;
+  }
+  .visor-head .meta-author > span {
+    white-space: nowrap;
+  }
+  .visor-head .meta-author img {
+    border-radius: 50%;
+    display: block;
+    object-fit: cover;
+  }
+  .visor-head .meta-author a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .visor-head .meta-author a:hover {
+    color: var(--color-secondary);
+    text-decoration: underline;
+  }
+  .visor-head .meta-details {
+    align-items: center;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .visor-head .meta-divider {
+    color: var(--color-muted);
+  }
+  .visor-head .author-trigger {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    display: inline-flex;
+    padding: 0;
+  }
+  .visor-head .author-bio-trigger {
+    background: transparent;
+    border: 0;
+    color: var(--color-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .visor-head .author-bio-trigger:hover {
+    text-decoration: underline;
+  }
+  .visor-head .post-category-list {
+    margin: 0 0 0.2rem;
+  }
+  .visor-head p.visor-resumen:last-child {
+    color: var(--color-text);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    margin: 0.6rem 0 0;
+  }
+
+  /* ---------- vitrina ---------- */
+  .vitrina {
+    position: relative;
+    height: clamp(340px, 58vh, 560px);
+    height: clamp(340px, 58dvh, 560px);
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(244, 237, 230, 0.14);
+    background:
+      radial-gradient(70% 60% at 50% 42%, #241d19 0%, #141110 58%, #0d0b0a 100%);
+    box-shadow: 0 24px 60px rgba(36, 19, 15, 0.28);
+    isolation: isolate;
+  }
+  .vitrina:fullscreen,
+  .vitrina:-webkit-full-screen {
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  model-viewer {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    outline: none;
+    --poster-color: transparent;
+    --progress-bar-color: #e0a458;
+    --progress-bar-height: 2px;
+  }
+  model-viewer:focus-visible {
+    outline: 2px solid #e0a458;
+    outline-offset: -4px;
+  }
+
+  .esqueleto {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(60% 50% at 50% 45%, rgba(224, 164, 88, 0.09), transparent 70%);
+  }
+
+  .sin-js {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    margin: 0;
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.95rem;
+    color: #c9bdb3;
+    line-height: 1.6;
+  }
+  .sin-js a {
+    color: #e0a458;
+  }
+
+  .progreso {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: rgba(244, 237, 230, 0.1);
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .progreso[data-visible='true'] {
+    opacity: 1;
+  }
+  .progreso span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: #e0a458;
+    transition: width 0.2s linear;
+  }
+
+  .estado {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 3;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a79c93;
+    background: rgba(13, 11, 10, 0.72);
+    border: 1px solid rgba(244, 237, 230, 0.12);
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: color 0.3s, border-color 0.3s, opacity 0.4s;
+  }
+  .estado[data-state='ok'] {
+    color: #9ad3a5;
+    border-color: rgba(154, 211, 165, 0.35);
+  }
+  .estado[data-state='err'] {
+    color: #f0a0a0;
+    border-color: rgba(240, 160, 160, 0.35);
+  }
+  .estado[data-oculto='true'] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hint {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: #a79c93;
+    background: rgba(13, 11, 10, 0.62);
+    border: 1px solid rgba(244, 237, 230, 0.1);
+    border-radius: 999px;
+    padding: 0.4rem 0.85rem;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
+    max-width: calc(100% - 32px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    transition: opacity 0.6s;
+  }
+
+  .flotantes {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 4;
+    display: flex;
+    gap: 6px;
+  }
+  .icono {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid rgba(244, 237, 230, 0.14);
+    background: rgba(13, 11, 10, 0.6);
+    color: #f4ede6;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .icono:hover {
+    border-color: #e0a458;
+    color: #e0a458;
+  }
+  .icono[hidden] {
+    display: none;
+  }
+  .icono svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---------- barra de controles ---------- */
+  .barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+  }
+
+  .boton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 44px;
+    padding: 0.55rem 0.95rem;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-text);
+    background: var(--color-surface-strong);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+  }
+  .boton:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+  }
+  .boton[aria-pressed='true'] {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+    background: var(--color-bg-alt);
+    box-shadow: inset 0 0 0 1px var(--color-secondary);
+  }
+  .boton:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .boton:disabled:hover {
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+  .boton svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .boton--cuadrado {
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+    font-size: 1.1rem;
+  }
+  .zoom {
+    display: flex;
+    gap: 4px;
+  }
+
+  .boton--oro {
+    margin-left: auto;
+    background: #e0a458;
+    border-color: #e0a458;
+    color: #1a1206;
+    font-weight: 600;
+  }
+  .boton--oro:hover {
+    background: #eab46f;
+    border-color: #eab46f;
+    color: #1a1206;
+  }
+  .boton--oro:disabled {
+    background: var(--color-surface-strong);
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+
+  /* ---------- datos ---------- */
+  .datos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    margin: 1.5rem 0 0;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .datos > div {
+    background: var(--color-bg);
+    padding: 0.85rem 1rem;
+  }
+  .datos dt {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: 0.3rem;
+  }
+  .datos dd {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-heading);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- notas ---------- */
+  .notas {
+    max-width: 68ch;
+    margin: 2.5rem auto 0;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--color-text);
+  }
+  .notas h2 {
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    color: var(--color-heading);
+    margin: 0 0 0.6rem;
+  }
+  .notas p {
+    margin: 0 0 0.9rem;
+  }
+  .notas code {
+    font-size: 0.85em;
+    background: var(--color-bg-alt);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+  }
+  .notas-pie {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    border-top: 1px solid var(--color-border);
+    padding-top: 1rem;
+    margin-top: 1.6rem;
+    margin-bottom: 0;
+  }
+  .notas-pie a {
+    color: var(--color-secondary);
+  }
+  .notas-pie-enlace {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .notas-pie-enlace a {
+    color: var(--color-secondary);
+    text-decoration: none;
+  }
+  .notas-pie-enlace a:hover {
+    text-decoration: underline;
+  }
+
+  /* ---------- aviso ---------- */
+  .aviso {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 20px);
+    z-index: 50;
+    max-width: min(92vw, 420px);
+    padding: 0.7rem 1.1rem;
+    border-radius: 10px;
+    background: #1a1512;
+    color: #f4ede6;
+    border: 1px solid rgba(224, 164, 88, 0.4);
+    font-size: 0.85rem;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+  }
+  .aviso[data-visible='true'] {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  @media (min-width: 760px) {
+    .vitrina {
+      height: clamp(420px, 62vh, 640px);
+      height: clamp(420px, 62dvh, 640px);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .visor-head h1 {
+      font-size: clamp(2rem, 11vw, 2.8rem);
+    }
+    .boton {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+    .boton--oro {
+      flex-basis: 100%;
+      margin-left: 0;
+    }
+    .datos {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hint,
+    .progreso span,
+    .aviso {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const mv = document.getElementById('mv') as HTMLElement & {
+    autoRotate: boolean;
+    cameraOrbit: string;
+    cameraTarget: string;
+    canActivateAR: boolean;
+    getDimensions(): { x: number; y: number; z: number };
+    getCameraOrbit(): { theta: number; phi: number; radius: number };
+    jumpCameraToGoal(): void;
+    activateAR(): void;
+  };
+
+  const vitrina = document.getElementById('vitrina') as HTMLElement;
+  const estado = document.getElementById('estado') as HTMLElement;
+  const progreso = document.getElementById('progreso') as HTMLElement;
+  const barra = progreso.firstElementChild as HTMLElement;
+  const hint = document.getElementById('hint') as HTMLElement;
+  const aviso = document.getElementById('aviso') as HTMLElement;
+
+  const btnRotar = document.getElementById('btnRotar') as HTMLButtonElement;
+  const btnCentrar = document.getElementById('btnCentrar') as HTMLButtonElement;
+  const btnAcercar = document.getElementById('btnAcercar') as HTMLButtonElement;
+  const btnAlejar = document.getElementById('btnAlejar') as HTMLButtonElement;
+  const btnAR = document.getElementById('btnAR') as HTMLButtonElement;
+  const btnPantalla = document.getElementById('btnPantalla') as HTMLButtonElement;
+  const btnCompartir = document.getElementById('btnCompartir') as HTMLButtonElement;
+
+  const datoMedidas = document.getElementById('datoMedidas') as HTMLElement;
+  const datoAR = document.getElementById('datoAR') as HTMLElement;
+
+  const ORBITA_INICIAL = '32deg 78deg auto';
+  const menosMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const numero = (n: number) => n.toFixed(2).replace('.', ',');
+
+  let avisoTimer = 0;
+  function mostrarAviso(texto: string) {
+    aviso.textContent = texto;
+    aviso.dataset.visible = 'true';
+    window.clearTimeout(avisoTimer);
+    avisoTimer = window.setTimeout(() => {
+      aviso.dataset.visible = 'false';
+    }, 4200);
+  }
+
+  function ponerEstado(texto: string, estadoNombre: 'load' | 'ok' | 'err') {
+    estado.textContent = texto;
+    estado.dataset.state = estadoNombre;
+    estado.dataset.oculto = estadoNombre === 'ok' ? 'true' : 'false';
+  }
+
+  // ---- carga y progreso ----
+  let completado = false;
+
+  mv.addEventListener('progress', (event) => {
+    if (completado) return;
+    const detalle = (event as CustomEvent<{ totalProgress: number }>).detail;
+    const parte = Math.max(0, Math.min(1, detalle?.totalProgress ?? 0));
+    progreso.dataset.visible = parte < 1 ? 'true' : 'false';
+    barra.style.width = `${Math.round(parte * 100)}%`;
+    if (parte < 1) ponerEstado(`Cargando modelo… ${Math.round(parte * 100)}%`, 'load');
+  });
+
+  function alCargar() {
+    if (completado) return;
+    completado = true;
+    progreso.dataset.visible = 'false';
+    ponerEstado('Modelo cargado', 'ok');
+    try {
+      const d = mv.getDimensions();
+      datoMedidas.textContent = `${numero(d.x)} × ${numero(d.y)} × ${numero(d.z)} m`;
+    } catch {
+      datoMedidas.textContent = 'no disponible';
+    }
+    const radio = mv.getCameraOrbit().radius;
+    if (typeof radio === 'number' && radio > 0) {
+      radioBase = radio;
+      radioObjetivo = radio;
+    }
+    comprobarAR();
+    window.setTimeout(() => {
+      hint.style.opacity = '0';
+    }, 4200);
+  }
+
+  mv.addEventListener('load', alCargar);
+
+  // Safari/WebKit no siempre emite `load`: se vigila la propiedad `loaded`.
+  const vigilante = window.setInterval(() => {
+    if (completado) {
+      window.clearInterval(vigilante);
+      return;
+    }
+    if (mv.loaded) alCargar();
+  }, 400);
+
+  mv.addEventListener('error', () => {
+    progreso.dataset.visible = 'false';
+    ponerEstado('No se pudo cargar el modelo', 'err');
+    datoMedidas.textContent = 'error de carga';
+  });
+
+  // ---- zoom ----
+  let radioBase = 0;
+  let radioObjetivo = 0;
+
+  function fijarRadio(metros: number) {
+    const o = mv.getCameraOrbit();
+    const minimo = radioBase * 0.5;
+    const maximo = radioBase * 2.2;
+    const destino = Math.min(maximo, Math.max(minimo, metros));
+    mv.cameraOrbit = `${o.theta}rad ${o.phi}rad ${destino}m`;
+    mv.jumpCameraToGoal();
+    radioObjetivo = destino;
+  }
+
+  function zoom(factor: number) {
+    const actual = radioObjetivo || radioBase || 1;
+    fijarRadio(actual * factor);
+  }
+
+  btnAcercar.addEventListener('click', () => zoom(0.82));
+  btnAlejar.addEventListener('click', () => zoom(1.22));
+
+  mv.addEventListener('camera-change', (event) => {
+    const detalle = (event as CustomEvent<{ source: string }>).detail;
+    if (detalle?.source !== 'user-interaction' || !radioBase) return;
+    const radio = mv.getCameraOrbit().radius;
+    if (typeof radio === 'number' && radio > 0) radioObjetivo = radio;
+  });
+
+  // ---- auto-rotación ----
+  function fijarRotacion(activa: boolean) {
+    mv.autoRotate = activa;
+    btnRotar.setAttribute('aria-pressed', String(activa));
+  }
+
+  btnRotar.addEventListener('click', () => {
+    fijarRotacion(!mv.autoRotate);
+  });
+
+  if (menosMovimiento) fijarRotacion(false);
+
+  // ---- centrar ----
+  btnCentrar.addEventListener('click', () => {
+    mv.cameraTarget = 'auto';
+    if (radioBase) {
+      mv.cameraOrbit = `32deg 78deg ${radioBase}m`;
+      radioObjetivo = radioBase;
+    } else {
+      mv.cameraOrbit = ORBITA_INICIAL;
+    }
+    mv.jumpCameraToGoal();
+    mostrarAviso('Cámara centrada');
+  });
+
+  // ---- realidad aumentada ----
+  function comprobarAR() {
+    let disponible = false;
+    try {
+      disponible = !!mv.canActivateAR;
+    } catch {
+      disponible = false;
+    }
+    btnAR.disabled = !disponible;
+    datoAR.textContent = disponible ? 'sí, en este dispositivo' : 'no en este navegador';
+    return disponible;
+  }
+
+  btnAR.addEventListener('click', () => {
+    try {
+      mv.activateAR();
+    } catch {
+      mostrarAviso('Este navegador no pudo abrir la cámara de realidad aumentada.');
+    }
+  });
+
+  mv.addEventListener('ar-status', (event) => {
+    const detalle = (event as CustomEvent<{ status: string }>).detail;
+    if (detalle?.status === 'session-started') {
+      mostrarAviso('Mueve el móvil para detectar el suelo y toca para colocar la escultura.');
+    } else if (detalle?.status === 'failed') {
+      mostrarAviso('No se pudo iniciar la realidad aumentada. Revisa que ARCore esté instalado.');
+    }
+  });
+
+  window.setTimeout(comprobarAR, 1500);
+
+  // ---- pantalla completa ----
+  const puedePantalla = !!(vitrina.requestFullscreen || (vitrina as unknown as { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen);
+  if (!puedePantalla) btnPantalla.hidden = true;
+
+  btnPantalla.addEventListener('click', async () => {
+    const el = vitrina as HTMLElement & { webkitRequestFullscreen?: () => void };
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (el.requestFullscreen) {
+        await el.requestFullscreen();
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      }
+    } catch {
+      mostrarAviso('El navegador no permitió la pantalla completa.');
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    const activa = !!document.fullscreenElement;
+    btnPantalla.setAttribute('aria-label', activa ? 'Salir de pantalla completa' : 'Ver a pantalla completa');
+    if (activa) hint.style.opacity = '0';
+  });
+
+  // ---- compartir ----
+  btnCompartir.addEventListener('click', async () => {
+    const url = new URL(location.pathname, location.origin).href;
+    const datos = {
+      title: 'Un clavo... s.o.c. · visor 3D',
+      text: 'Escultura “Un clavo... s.o.c.”, del año 1995, en 3D y en realidad aumentada.',
+      url,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(datos);
+        return;
+      } catch {
+        // el usuario canceló o el navegador falló: se intenta copiar
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      mostrarAviso('Enlace copiado al portapapeles');
+    } catch {
+      mostrarAviso(url);
+    }
+  });
+
+  // ---- teclado ----
+  vitrina.addEventListener('keydown', (event) => {
+    const o = mv.getCameraOrbit();
+    const paso = 0.12;
+    let usado = true;
+    switch (event.key) {
+      case 'ArrowLeft':
+        mv.cameraOrbit = `${o.theta - paso}rad ${o.phi}rad auto`;
+        break;
+      case 'ArrowRight':
+        mv.cameraOrbit = `${o.theta + paso}rad ${o.phi}rad auto`;
+        break;
+      case 'ArrowUp':
+        mv.cameraOrbit = `${o.theta}rad ${Math.max(0.2, o.phi - paso / 2)}rad auto`;
+        break;
+      case 'ArrowDown':
+        mv.cameraOrbit = `${o.theta}rad ${Math.min(Math.PI / 2, o.phi + paso / 2)}rad auto`;
+        break;
+      case '+':
+      case '=':
+        zoom(0.82);
+        break;
+      case '-':
+      case '_':
+        zoom(1.22);
+        break;
+      case '0':
+        btnCentrar.click();
+        return;
+      default:
+        usado = false;
+    }
+    if (usado) {
+      event.preventDefault();
+      mv.jumpCameraToGoal();
+    }
+  });
+</script>

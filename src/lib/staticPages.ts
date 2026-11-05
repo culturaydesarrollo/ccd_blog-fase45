@@ -9,4 +9,5 @@
  */
 export const LAST_UPDATED: Record<string, string> = {
   '/acerca/': '2026-10-27',
+  '/visor/un-clavo/': '2026-11-03',
 };
