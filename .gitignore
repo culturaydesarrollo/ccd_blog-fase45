@@ -6,6 +6,8 @@ dist/*
 dist_exe/*
 build_pyinstaller/*
 docs/*
+# La bitácora de sesiones sí se versiona (skill bitacora-sesiones).
+!docs/sesiones/
 # Generadores locales de contenido MDX, no se publican ni versionan con GitHub.
 src/pages/generador-mdx.astro
 generador-mdx.html
