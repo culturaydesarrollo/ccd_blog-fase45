@@ -155,11 +155,12 @@ const categorias = articulo?.data.category ?? [];
         como está registrada en el modelo: 0,94 × 0,99 × 0,54 m.
       </p>
       <p>
-        El visor funciona en los navegadores modernos de escritorio y de móvil:
-        Chrome, Safari, Firefox y Edge. Solo pide WebGL2, que todos tienen. La <strong>realidad aumentada</strong> sí tiene requisitos propios: en Android
-        necesita <strong>ARCore</strong> y Chrome, y en iPhone necesita el
-        archivo <code>.usdz</code> que abre Quick Look, que esta pieza todavía
-        no tiene.
+        El visor 3D funciona en los navegadores modernos de escritorio y de móvil
+        con WebGL2: Chrome, Safari, Edge y Firefox. La <strong>realidad aumentada</strong>
+        es aparte: solo está disponible en <strong>Chrome para Android</strong> con
+        ARCore y Scene Viewer instalados. Firefox no soporta WebXR de realidad
+        aumentada, y en iPhone haría falta el archivo <code>.usdz</code> que abre
+        Quick Look, que esta pieza todavía no tiene.
       </p>
       <p class="notas-pie">
         Modelo: <code>unclavo_soc.glb</code> · 5.084.748 bytes · visor <a href="https://modelviewer.dev" rel="noopener">model-viewer</a> 4.4 (Apache 2.0, autoalojado).
@@ -822,6 +823,9 @@ const categorias = articulo?.data.category ?? [];
       disponible = false;
     }
     btnAR.disabled = !disponible;
+    btnAR.title = disponible
+      ? ''
+      : 'La realidad aumentada solo está disponible en Chrome para Android con ARCore. Firefox no la soporta, y en iPhone haría falta un archivo .usdz.';
     datoAR.textContent = disponible ? 'sí, en este dispositivo' : 'no en este navegador';
     return disponible;
   }
