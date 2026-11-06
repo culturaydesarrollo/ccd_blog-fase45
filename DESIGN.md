@@ -214,7 +214,7 @@ Inversiones planas del mismo carácter: Tinta Café → durazno claro (#f1c8ae),
 
 ### Hierarchy
 - **Display** (600, clamp(2.2rem, 5vw, 3.4rem), 1.16): h1 de página (`.page-heading h1`), con letter-spacing -0.01em.
-- **Title** (600, clamp(1.4rem, 3vw, 1.7rem), 1.16): títulos de tarjeta y de artículo (`.post-title-link`, destacados).
+- **Title** (600, 1.5rem, 1.2): títulos de tarjeta y de artículo (`.post-title-link`, destacados, `.article-header h1`).
 - **Heading** (600, serif, 1.16): h2–h4; en artículo, heredan color Tinta Café.
 - **Lectura** (400, 1rem, 1.7): cuerpo del artículo, serif, máximo 68ch (`.article-content`). Descripciones de tarjeta también serif.
 - **Cuerpo** (400, 1rem, 1.7): UI, metadatos, nav, pie — sans.
@@ -227,6 +227,24 @@ Inversiones planas del mismo carácter: Tinta Café → durazno claro (#f1c8ae),
 
 ### Rampa auxiliar consolidada (24/10/2026)
 Los tamaños de texto auxiliar se consolidaron a **3 pasos reales**: `micro` (0.75rem — eyebrows, chips, fechas, flechas), `meta` (0.85rem — breadcrumbs, TOC, meta de tarjetas, labels de formulario) y `ui` (0.95rem — párrafos de UI, footer, comentarios). La rampa absorbió 12 tamaños casi indistinguibles (0.62–0.92) con 48 reemplazos verificados por script; `0.75rem` es también el piso de legibilidad (11.2px ≥ 11px). Por encima: `frase`/`lede`/`lede-alta` (1.05–1.15) y titulares serif (1.25–2.3 + clamp 2.1–2.7), sin cambios.
+
+### Cabecera de post y autoría (05/11/2026)
+
+La cabecera de un post —incluido el visor— replica la línea de las tarjetas de portada:
+
+- **Título**: paso `Title`, **1.5rem (24px)**, serif 600, `line-height: 1.2`, color Tinta Café. Un solo color: sin acentos cromáticos dentro del titular.
+- **Autoría**: paso `meta`, **0.85rem**, peso **400**. El nombre, cuando es enlace, va en terracota; en tarjeta sin enlace, en color de texto. Nunca en `<strong>`.
+- **“ver bio”**: paso `micro`, **0.75rem**, peso 700, terracota.
+- **Avatar**: 44px en cabecera de artículo, 28px en tarjeta.
+- **Ancho**: la cabecera ocupa el contenedor (750–850px), no los 68ch. La medida de lectura aplica al cuerpo, nunca al encabezado.
+
+### Excepción: visor 3D (`/visor/un-clavo/`)
+
+El visor es un post de tecnología nueva y asume sus convenciones sin romper el sistema:
+
+- El CTA **“Ver en tu espacio”** puede ir relleno de terracota: es la acción principal del visor y la única superficie grande admitida dentro de la Regla de la Terracota Escasa.
+- El dorado `#e0a458` vive **solo dentro del escenario oscuro** (progreso de carga, esqueleto, hover de iconos, enlace sin JS). Nunca sale de la vitrina; foco, enlaces y controles de página siguen en terracota.
+- El escenario 3D es siempre oscuro, con independencia del tema. Sus colores son locales de la vitrina y no se mezclan con los tokens de página.
 
 ## Layout
 
