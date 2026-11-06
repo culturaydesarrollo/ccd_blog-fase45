@@ -192,7 +192,7 @@ const categorias = articulo?.data.category ?? [];
   }
 
   .visor-head {
-    max-width: 70ch;
+    max-width: var(--ancho-lectura);
     margin: 0.5rem 0 1.5rem;
   }
   .visor-head h1 em {
@@ -359,7 +359,7 @@ const categorias = articulo?.data.category ?? [];
     top: 14px;
     left: 14px;
     z-index: 3;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #a79c93;
@@ -390,7 +390,7 @@ const categorias = articulo?.data.category ?? [];
     bottom: 14px;
     transform: translateX(-50%);
     z-index: 3;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     letter-spacing: 0.04em;
     color: #a79c93;
     background: rgba(13, 11, 10, 0.62);
@@ -463,7 +463,7 @@ const categorias = articulo?.data.category ?? [];
     min-height: 44px;
     padding: 0.55rem 0.95rem;
     font: inherit;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 500;
     line-height: 1;
     color: var(--color-text);
@@ -546,7 +546,7 @@ const categorias = articulo?.data.category ?? [];
     padding: 0.85rem 1rem;
   }
   .datos dt {
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--color-muted);
@@ -562,22 +562,24 @@ const categorias = articulo?.data.category ?? [];
 
   /* ---------- notas ---------- */
   .notas {
-    max-width: 68ch;
+    max-width: var(--ancho-lectura);
     margin: 2.5rem auto 0;
-    font-size: 0.95rem;
-    line-height: 1.65;
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.7;
     color: var(--color-text);
   }
   .notas h2 {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     letter-spacing: 0.02em;
-    color: var(--color-heading);
+    color: var(--color-primary);
     margin: 0 0 0.6rem;
   }
   .notas p {
     margin: 0 0 0.9rem;
   }
   .notas code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.85em;
     background: var(--color-bg-alt);
     padding: 0.1em 0.35em;
@@ -596,7 +598,7 @@ const categorias = articulo?.data.category ?? [];
   }
   .notas-pie-enlace {
     margin: 0.5rem 0 0;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 600;
   }
   .notas-pie-enlace a {
@@ -640,7 +642,7 @@ const categorias = articulo?.data.category ?? [];
 
   @media (max-width: 520px) {
     .visor-head h1 {
-      font-size: clamp(2rem, 11vw, 2.8rem);
+      font-size: clamp(2.1rem, 11vw, 2.7rem);
     }
     .boton {
       flex: 1 1 auto;
