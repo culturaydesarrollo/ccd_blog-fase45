@@ -7,12 +7,21 @@ sin framework de UI. Todo el contenido vive en el repo y se genera a `dist/`.
 
 ```bash
 cmd /c npm run validate     # typecheck + build — el gate antes de commitear
+cmd /c npm run test         # tests de interacción del visor (Playwright)
 cmd /c npm run dev          # servidor local
 cmd /c npm run build        # solo build
 ```
 
 > En esta máquina `npm.ps1` está bloqueado por la execution policy de PowerShell:
 > usar siempre `cmd /c npm …` (o `npm.cmd`).
+
+## Tests
+
+- `tests/visor.spec.ts` — interacción del visor 3D (`/visor/un-clavo/`): carga,
+  auto-rotación, zoom con límites, centrar, AR, compartir, pantalla completa y teclado.
+- Playwright corre contra el **build real** (`dist/` vía `astro preview`), con el
+  Chrome del sistema (`channel: 'chrome'`): sin descargar Chromium.
+- Antes de commitear cambios de comportamiento en el visor: `npm run test` en verde.
 
 ## Estructura
 

@@ -21,3 +21,9 @@ local-tools/
 
 # Local Netlify folder
 .netlify
+
+# Artefactos de Playwright (tests de interacción del visor)
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
