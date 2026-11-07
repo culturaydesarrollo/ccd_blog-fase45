@@ -20,8 +20,25 @@ test.describe('portada: pieza interactiva', () => {
     const tarjeta = seccion.locator('.featured-card');
     await expect(tarjeta.locator('.featured-badge')).toHaveText('Visor 3D');
     await expect(tarjeta.locator('p')).toHaveText(RESUMEN);
+
+    // El título del artículo dentro del resumen es un hipervínculo a la pieza.
+    const enlaceArticulo = tarjeta.locator('p a[href="/un-clavo-soc-ficcion-plastica/"]');
+    await expect(enlaceArticulo).toHaveText('“Un clavo... s.o.c - Ficción plástica”');
+    await expect(enlaceArticulo).toBeVisible();
+
     await expect(tarjeta.locator('a[href="/visor/un-clavo/"].read-more')).toHaveText(
       'Abrir el visor →'
     );
+  });
+
+  test('el enlace del resumen lleva al artículo que nombra', async ({ page }) => {
+    await page.goto('/');
+
+    await page
+      .locator('.visor-section .featured-card p a[href="/un-clavo-soc-ficcion-plastica/"]')
+      .click();
+
+    await expect(page).toHaveURL(/\/un-clavo-soc-ficcion-plastica\/$/);
+    await expect(page.locator('h1')).toContainText('Ficción Plástica');
   });
 });
