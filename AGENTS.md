@@ -26,7 +26,8 @@ cmd /c npm run build        # solo build
 
 ## Git
 
-- Rama de trabajo: `fase-45`. Remotos: `fase45` (repo del proyecto) y `origin`.
+- Rama de trabajo y de publicación: `main`. Todo cambio se integra y se empuja a `main`;
+  no se publica desde ramas de fase. Remotos: `fase45` (repo del proyecto) y `origin`.
 - Identidad: `corporacionculturadesarrollo <corporacionculturadesarrollo@gmail.com>`.
 - Commits atómicos y convencionales (`feat:`, `fix:`, `style:`, `chore:`); no mezclar
   formateo con cambios de comportamiento; el mensaje explica el **por qué**.
