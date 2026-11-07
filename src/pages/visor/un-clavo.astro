@@ -75,7 +75,7 @@ const categorias = articulo?.data.category ?? [];
       </p>
     </header>
 
-    <section class="vitrina" id="vitrina" aria-label="Visor 3D de la escultura Un clavo... s.o.c.">
+    <section class="vitrina" id="vitrina" tabindex="0" aria-label="Visor 3D de la escultura Un clavo... s.o.c.">
       <div class="progreso" id="progreso" aria-hidden="true"><span></span></div>
 
       <div class="estado" id="estado" data-state="load" role="status" aria-live="polite">
@@ -302,6 +302,13 @@ const categorias = articulo?.data.category ?? [];
     --progress-bar-height: 2px;
   }
   model-viewer:focus-visible {
+    outline: 3px solid var(--color-secondary);
+    outline-offset: -4px;
+  }
+
+  /* La vitrina es el destino del teclado (flechas, +/-, 0): al recibir el
+     foco mostramos el mismo anillo que en el modelo. */
+  .vitrina:focus-visible {
     outline: 3px solid var(--color-secondary);
     outline-offset: -4px;
   }
