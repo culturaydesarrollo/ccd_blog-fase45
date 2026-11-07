@@ -71,7 +71,54 @@ blanco solo en el dominio y con textura en local y en `*.pages.dev`.
 
 ### Pendiente
 
-- La rama remota `fase45/fase-45` sigue en `b1d97fc`; ya no publica y puede
-  borrarse cuando se confirme que nadie la necesita.
-- Los botones del visor (rotación, zoom, compartir, pantalla completa, AR)
-  siguen sin tests automatizados de interacción.
+- ~~Los botones del visor (rotación, zoom, compartir, pantalla completa, AR)
+  siguen sin tests automatizados de interacción.~~ **Cerrado el mismo día**
+  (ver abajo).
+
+## 2026-11-07 — Tests automatizados de interacción del visor
+
+**Qué se hizo** — Suite Playwright con 13 tests para los controles del visor
+3D, que cierra el pendiente de la sesión anterior. (También se cerró el otro
+pendiente: la rama huérfana `fase45/fase-45` se borró remota y local, tras
+confirmar 0 commits únicos no integrados.)
+
+### Infraestructura
+
+- `@playwright/test` con `channel: 'chrome'`: usa el Chrome del sistema,
+  sin descargar Chromium.
+- `playwright.config.ts` sirve el **build real** (`npm run build &&
+  npm run preview` sobre `dist/`), igual que Cloudflare Pages, no el dev server.
+- `npm test` en `package.json`; documentado en `AGENTS.md`.
+- Artefactos de Playwright (`test-results/`, `playwright-report/`) ignorados.
+
+### Causas raíz que los tests destaparon
+
+1. **El teclado era inalcanzable** (bug real, `fix de90b27`): el manejador de
+   flechas/`+`/`-`/`0` vive en `#vitrina`, pero ni la sección ni el
+   `model-viewer` tenían `tabindex` → con foco real el handler jamás se
+   disparaba. Fix: `tabindex="0"` en `.vitrina` + anillo `focus-visible`.
+2. **`navigator.share` cuelga en headless** con gesto de usuario (sin gesto
+   rechaza al instante): el `await` no vuelve y el fallback de portapapeles
+   no se alcanza a probar. Los tests de compartir stubbean las tres ramas
+   (sin share / share rechaza / share resuelve) con `addInitScript` sobre
+   `Navigator.prototype.share`.
+3. **El portapapeles es del sistema**, no del contexto de navegador: lo pisan
+   tests en paralelo. Los tests de compartir van en `mode: 'serial'`.
+
+### Cobertura (13 tests, todos en verde)
+
+Carga y dimensiones · auto-rotación (`aria-pressed` + `mv.autoRotate`) ·
+zoom con topes 0,5×–2,2× · centrar con aviso y retorno de radio · AR
+deshabilitado con `title` explicativo (Firefox/iPhone/`.usdz`) · compartir en
+sus tres ramas · pantalla completa (`aria-label` de entrada/salida, con
+fallback si el entorno la rechaza) · teclado (flechas giran, `0` centra,
+`+`/`-` hacen zoom).
+
+### Lecciones
+
+- Un test que no puede enfocar su objetivo suele revelar un bug de
+  accesibilidad, no un problema del test.
+- APIs de plataforma que abren UI del sistema (`navigator.share`,
+  pantalla completa) no son testeables en headless: stubbear la entrada y
+  ejercitar las ramas del código, en vez de aflojar la aserción.
+- `npm run validate` + `npm run test` en verde antes de cada push.
