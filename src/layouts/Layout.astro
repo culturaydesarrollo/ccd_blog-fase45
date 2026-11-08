@@ -78,6 +78,29 @@ const { title, description, type = 'website', author, publishedDate, image, imag
 		</script>
 		<ClientRouter />
 
+		<!--
+		  Microsoft Clarity (heatmaps + grabaciones de sesión), proyecto
+		  3j9kkblzoj. Solo analítica cualitativa complementaria: la cuantitativa
+		  (Web Analytics) ya la inyecta Cloudflare en el borde. Es el snippet
+		  oficial tal cual; la CSP del dominio debe permitir www.clarity.ms
+		  (Transform Rule de la zona).
+		-->
+		<script is:inline>
+			/* Clarity (project 3j9kkblzoj) — snippet oficial, sin modificar */
+			!(function (c, a) {
+				c[a] =
+					c[a] ||
+					function () {
+						(c[a].q = c[a].q || []).push(arguments);
+					};
+				var b = document.createElement('script');
+				b.async = true;
+				b.src = 'https://www.clarity.ms/tag/3j9kkblzoj';
+				var s = document.getElementsByTagName('script')[0];
+				s.parentNode.insertBefore(b, s);
+			})(window, 'clarity', 'script');
+		</script>
+
 		<slot name="head" />
 	</head>
 	<body id="top">
