@@ -2,6 +2,77 @@
 
 **Estado:** cerrado · **Inicio:** 2026-11-07 · **Última:** 2026-11-07
 
+## 2026-11-07 — Analítica gratuita: Cloudflare Web Analytics + Microsoft Clarity
+
+**Qué se hizo** — Activar analítica **totalmente gratuita** en el blog:
+Web Analytics de Cloudflare (cuantitativa) ya estaba activa sin que lo
+supiéramos, y se añadió Microsoft Clarity (cualitativa: heatmaps y
+grabaciones de sesiones) como complemento.
+
+### Contexto y decisión
+
+El usuario pidió analítica gratis de Cloudflare. Se compararon las opciones
+de `free-for.dev` (Cloudflare WA, GoatCounter, Microsoft Clarity) y se
+eligió: **Cloudflare WA** como base (cero servicios nuevos, mismo panel) y
+**Clarity** como complemento para entender *cómo* se usa el visor 3D, que
+las métricas de página vistas no explican.
+
+### Hallazgo: el blog ya contaba visitas (falso negativo de `curl`)
+
+- La zona tiene un sitio Web Analytics con **setup automático** (id
+  `15de5db4…`, 22 días de vida) en `culturaydesarrollo.org`.
+- En plan **Free el beacon se inyecta en todos los subdominios** de la
+  zona, incluido `blog.culturaydesarrollo.org` → el blog ya estaba midiendo
+  (65 vistas / 49 visitas en 24 h al revisar).
+- **Lección:** `curl` devuelve HTML sin beacon porque Cloudflare no inyecta
+  a bots/UA no navegadores. La verificación fiable es un navegador real
+  (beacon `beacon.min.js/vce701823…` + POST `/cdn-cgi/rum` en `performance`).
+- Se creó por error un sitio manual para el blog (id `2972ea97…`,
+  "Instalación de snippet de JS"): **redundante y en 0 vistas**, se eliminó;
+  quedó 1 solo sitio con "Configuración automática".
+- La API de Web Analytics no funciona con el token actual (404
+  `code 10001`, falta permiso `Web Analytics: Edit`): todo por panel.
+
+### Clarity (proyecto `3j9kkblzoj`)
+
+- Snippet **oficial sin modificar** en `src/layouts/Layout.astro`
+  (`is:inline`, afecta a todas las páginas) — commit `98c103d`.
+- Elegido el sector "Ciencia, ciencias sociales y otros".
+
+### CSP: ampliación obligatoria (sin ella Clarity falla en silencio)
+
+La CSP vive en la Transform Rule `a2006c83…` del panel, no en el repo.
+Como la API rechaza `PUT` con el token (`code 10405`), se editó por panel
+(Rules → Reglas de transformación de encabezados de respuestas). Cambios:
+
+- `script-src`: `+ https://www.clarity.ms https://scripts.clarity.ms https://*.clarity.ms`
+- `connect-src`: `+ https://*.clarity.ms https://c.bing.com`
+- `img-src`: `+ https://c.clarity.ms https://c.bing.com`
+
+`default-src` **no basta** (si existe `script-src`/`connect-src`, el fallback
+no aplica). Clarity rotsubdominios de una letra (`a.clarity.ms`…`z`), por
+eso el wildcard.
+
+### Verificación en vivo
+
+- `validate` (typecheck + build) y **15/15 tests** en verde antes del push.
+- Push a `main` (`98c103d`) → Pages **deploy success** (snippet en producción
+  en <1 min).
+- Navegador real: tag `www.clarity.ms/tag/3j9kkblzoj` 200,
+  librería `scripts.clarity.ms/0.8.75/clarity.js`, `window.clarity` función,
+  **`l.clarity.ms/collect`** respondiendo, beacon de Cloudflare intacto y
+  **consola sin errores ni avisos** (cero violaciones de CSP).
+
+### Lecciones
+
+- Un chequeo por `curl` sobre beacon/inyección perimetral da falsos
+  negativos: Cloudflare decide inyección por UA.
+- Antes de crear un sitio de analítica, comprobar si el setup automático de
+  la zona ya lo cubre (plan Free = todos los subdominios, 0 reglas).
+- "Funciona sin CSP" no sobrevive al contacto con una CSP estricta: añadir
+  Clarity exige tocar la Transform Rule, y si no, el fallo es **silencioso**
+  (página bien, dashboard vacío).
+
 ## 2026-11-07 — Un solo branch y el visor publicado de verdad
 
 **Qué se hizo** — Consolidación de `main` como única rama de trabajo y
