@@ -294,3 +294,22 @@ test.describe('visor Un clavo: teclado', () => {
     expect(Math.abs(vuelta - base)).toBeLessThan(base * 0.01);
   });
 });
+
+test.describe('visor Un clavo: resumen', () => {
+  test('el título del artículo dentro del resumen es un enlace a la pieza', async ({
+    page,
+  }) => {
+    await page.goto(URL_VISOR);
+
+    const resumen = page.locator('p.visor-resumen');
+    await expect(resumen).toContainText('Escultura del artículo');
+
+    // Mismo patrón que la portada: el nombre del artículo navega al artículo.
+    const enlace = resumen.locator('a[href="/un-clavo-soc-ficcion-plastica/"]');
+    await expect(enlace).toHaveText('“Un clavo... s.o.c - Ficción plástica”');
+
+    await enlace.click();
+    await expect(page).toHaveURL(/\/un-clavo-soc-ficcion-plastica\/$/);
+    await expect(page.locator('h1')).toContainText('Ficción Plástica');
+  });
+});
