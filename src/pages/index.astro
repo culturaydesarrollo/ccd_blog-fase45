@@ -161,6 +161,46 @@ const websiteSchema = {
                 </div>
             ) : (
                 <>
+                    {/* La pieza interactiva va primera: es la publicación más
+                        reciente (visor 3D, 2026-11-07); después el artículo
+                        reciente y el resto ordenados por fecha. */}
+                    <section class="featured-section visor-section" aria-labelledby="visor-heading">
+                        <div class="featured-header">
+                            <h2 id="visor-heading">Pieza interactiva</h2>
+                            <p>La escultura del ensayo, en tres dimensiones.</p>
+                        </div>
+                        <div class="featured-grid">
+                            <article
+                                class="featured-card latest-card"
+                                data-search="un clavo visor 3d escultura realidad aumentada rafael dimitri guzman camacho arte"
+                                data-author="Rafael Dimitri Guzmán Camacho"
+                                data-category="visor 3d|arte"
+                                data-post-id="visor/un-clavo"
+                            >
+                                <div class="latest-card-header">
+                                    <span class="featured-badge">Visor 3D</span>
+                                    <h3><a href="/visor/un-clavo/">Un clavo... s.o.c. · visor 3D</a></h3>
+                                    <div class="featured-meta">
+                                        <span class="featured-author-line">
+                                            <img class="post-author-avatar" src="/images/dimitri_guzman.webp" alt="Foto de Rafael Dimitri Guzmán Camacho" width="28" height="28" loading="lazy" decoding="async" />
+                                            <span>Por <a href="/autores/rafael-dimitri-guzman-camacho/">Rafael Dimitri Guzmán Camacho</a></span>
+                                        </span>
+                                        <time class="post-date" datetime="2026-11-07T00:00:00.000Z">7 de noviembre de 2026 · Realidad aumentada · 5,08 MB</time>
+                                    </div>
+                                </div>
+                                <div class="latest-card-body">
+                                    <PostMedia title="Un clavo... s.o.c. · visor 3D" image="/images/Un-clavo-soc.webp" variant="latest" />
+                                    <div class="latest-card-content">
+                                        <p>
+                                            Escultura del artículo <a href="/un-clavo-soc-ficcion-plastica/">“Un clavo... s.o.c - Ficción plástica”</a> obra del año 1995, en tres dimensiones. Gírala, acércala y —si tu móvil lo permite— colócala a escala real en tu espacio.
+                                        </p>
+                                        <a href="/visor/un-clavo/" class="read-more">Abrir el visor →</a>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
                     {latestPost && (
                         <section class="featured-section latest-section" aria-labelledby="latest-heading">
                             <div class="featured-header">
@@ -218,43 +258,6 @@ const websiteSchema = {
                             </div>
                         </section>
                     )}
-
-                    <section class="featured-section visor-section" aria-labelledby="visor-heading">
-                        <div class="featured-header">
-                            <h2 id="visor-heading">Pieza interactiva</h2>
-                            <p>La escultura del ensayo, en tres dimensiones.</p>
-                        </div>
-                        <div class="featured-grid">
-                            <article
-                                class="featured-card latest-card"
-                                data-search="un clavo visor 3d escultura realidad aumentada rafael dimitri guzman camacho arte"
-                                data-author="Rafael Dimitri Guzmán Camacho"
-                                data-category="visor 3d|arte"
-                                data-post-id="visor/un-clavo"
-                            >
-                                <div class="latest-card-header">
-                                    <span class="featured-badge">Visor 3D</span>
-                                    <h3><a href="/visor/un-clavo/">Un clavo... s.o.c. · visor 3D</a></h3>
-                                    <div class="featured-meta">
-                                        <span class="featured-author-line">
-                                            <img class="post-author-avatar" src="/images/dimitri_guzman.webp" alt="Foto de Rafael Dimitri Guzmán Camacho" width="28" height="28" loading="lazy" decoding="async" />
-                                            <span>Por <a href="/autores/rafael-dimitri-guzman-camacho/">Rafael Dimitri Guzmán Camacho</a></span>
-                                        </span>
-                                        <span class="post-date">Realidad aumentada · 5,08 MB</span>
-                                    </div>
-                                </div>
-                                <div class="latest-card-body">
-                                    <PostMedia title="Un clavo... s.o.c. · visor 3D" image="/images/Un-clavo-soc.webp" variant="latest" />
-                                    <div class="latest-card-content">
-                                        <p>
-                                            Escultura del artículo <a href="/un-clavo-soc-ficcion-plastica/">“Un clavo... s.o.c - Ficción plástica”</a> obra del año 1995, en tres dimensiones. Gírala, acércala y —si tu móvil lo permite— colócala a escala real en tu espacio.
-                                        </p>
-                                        <a href="/visor/un-clavo/" class="read-more">Abrir el visor →</a>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                    </section>
 
                     {featuredPosts.length > 0 && (
                         <section class="featured-section older-posts-section" aria-labelledby="featured-heading">
