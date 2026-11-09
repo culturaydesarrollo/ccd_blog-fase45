@@ -92,3 +92,43 @@ la posición en el DOM, no con un `pubDate` inflado (lo intentado en `a24b57f`).
 **Pendientes**
 - [ ] Ninguno. Los otros 9 posts sin `createdAt` caen al `pubDate` (mismo día),
       así que no alteran el orden.
+
+## 2026-11-08 — "Pieza interactiva" integrada al patrón de la portada
+
+**Qué se hizo** — Tras mover la sección a primera posición, el usuario señaló
+que se sentía una sección ajena a las demás. Ajustes (`49d6458`):
+
+1. **Posición**: vuelve a la secuencia conocida — *Artículo reciente → Pieza
+   interactiva → Destacados → Anteriores* (mi cambio anterior la había puesto
+   arriba de todo).
+2. **Sin subtítulo**: la cabecera queda solo con `<h2>Pieza interactiva</h2>`
+   (antes llevaba "La escultura del ensayo, en tres dimensiones."). **Por
+   decisión del usuario**: las secciones no llevan subtítulo.
+3. **Carrusel y acumulación**: la sección ya no tiene la tarjeta escrita a
+   mano en el marcado; renderiza desde el array `piezasInteractivas` del
+   frontmatter, **ordenado por `fecha` (más reciente primero)** y partido con
+   `enBloques(…, 1)` (una pieza por bloque). Flechas y puntos aparecen a
+   partir de la segunda pieza. **Para publicar la próxima pieza basta con
+   empujar un objeto al array** — es la instrucción del usuario: "en adelante,
+   las piezas interactivas se seguirán ordenando y acumulando en carrusel".
+4. **Bio**: la tarjeta gana el botón `ver bio` + `author-trigger` + el modal
+   `author-modal-<slug>`, resueltos desde el artículo relacionado
+   (`postRelacionado`) con `getAuthorImage`/`getAuthorBio`, para que la ficha
+   sea idéntica a la del resto de la portada (misma fuente, sin duplicar la
+   bio).
+5. **Contador**: "17 artículos · página 1 de 2" → **"17 elementos · página 1
+   de 2"** (SSR y la etiqueta que reescribe el buscador al filtrar), porque ya
+   no todo lo listado es un artículo.
+6. El resumen pasó a `<p set:html>` para conservar el hipervínculo al
+   artículo; **el texto no cambió**.
+
+**Test** — `tests/portada.spec.ts`: el alcance del resumen se limita a
+`.latest-card-content > p` **porque** la tarjeta ahora incluye el `<p>` del
+modal de biografía (el selector anterior casaba con dos `<p>` y rompía el modo
+estricto de Playwright). El resto del test (badge, enlace al artículo, CTA)
+sin cambios.
+
+**Verificación:** `npm run validate` ✅ · `npm test` **16/16** ✅ · build local
+con las 4 secciones en orden, cabecera sin subtítulo, "17 elementos", trigger
+y modal presentes, y la fecha "7 de noviembre de 2026 · Realidad aumentada ·
+5,08 MB" en la tarjeta.
