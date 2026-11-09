@@ -59,6 +59,36 @@ hace meses. Aquí ambas apuntaban al origen del texto, no a la publicación real
 - `a24b57f` `fix(content): corrige la fecha de publicacion de Un clavo a la
   real del visor` → push `main` (Cloudflare Pages despliega solo).
 
+## 2026-11-08 — Corrección: el reciente es el visor, no el ensayo
+
+**Qué se hizo** — Revertir `a24b57f` y reordenar la portada por posición.
+
+**El usuario aclaró**: "Un clavo... s o c - Ficción Plástica" es de **2026-09-27**
+(su fecha real de escritura) y ahí se queda; lo **más reciente** es la **pieza
+interactiva (visor 3D)**, publicada el 2026-11-07. Es decir, el error no era la
+fecha del ensayo sino **dónde estaba colocada** la sección del visor.
+
+**Cambios** (`d8ca568`):
+1. `un-clavo-soc-ficcion-plastica.mdx` → `pubDate: "2026-09-27"` y
+   `createdAt: "2026-09-27T18:13:37-05:00"` (originales restaurados).
+2. `src/pages/index.astro` → la sección `visor-section` ("Pieza interactiva")
+   pasa a ser la **primera de `<main>`**, antes de "Artículo reciente" (que
+   vuelve a mostrar El Real de Minas, 2-nov). Así el orden lo decide la
+   estructura, no fechas editadas a mano.
+3. La cabecera de la tarjeta del visor gana `<time datetime="2026-11-07">`
+   con el formato del resto de tarjetas: "7 de noviembre de 2026 · Realidad
+   aumentada · 5,08 MB".
+
+**Orden resultante:** Pieza interactiva (7-nov) → Artículo reciente (2-nov) →
+Destacados (28-oct, **27-sep Un clavo**, …) → Anteriores.
+
+**Verificación:** `npm run validate` ✅ · `npm test` **16/16** ✅ · build local
+con las 4 secciones en ese orden y las fechas correctas.
+
+**Lección:** `getPostSortTimestamp` solo rige los posts de la colección `blog`;
+el visor es una sección estática, así que "es lo más reciente" se expresa con
+la posición en el DOM, no con un `pubDate` inflado (lo intentado en `a24b57f`).
+
 **Pendientes**
 - [ ] Ninguno. Los otros 9 posts sin `createdAt` caen al `pubDate` (mismo día),
       así que no alteran el orden.
