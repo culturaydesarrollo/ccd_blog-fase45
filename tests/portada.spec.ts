@@ -19,7 +19,9 @@ test.describe('portada: pieza interactiva', () => {
 
     const tarjeta = seccion.locator('.featured-card');
     await expect(tarjeta.locator('.featured-badge')).toHaveText('Visor 3D');
-    await expect(tarjeta.locator('p')).toHaveText(RESUMEN);
+    // Alcance al contenido de la tarjeta: la tarjeta ahora incluye también el
+    // modal de biografía, que lleva su propio <p>.
+    await expect(tarjeta.locator('.latest-card-content > p')).toHaveText(RESUMEN);
 
     // El título del artículo dentro del resumen es un hipervínculo a la pieza.
     const enlaceArticulo = tarjeta.locator('p a[href="/un-clavo-soc-ficcion-plastica/"]');

@@ -78,6 +78,46 @@ const featuredPosts = sortedPosts.filter((post) => post.data.featured && post.id
 const regularPosts = sortedPosts.filter((post) => post.id !== latestPost?.id && !post.data.featured);
 const bloquesDestacados = enBloques(featuredPosts);
 const bloquesAnteriores = enBloques(regularPosts);
+
+// Piezas interactivas (visores 3D): no son posts de la colección `blog`, pero
+// siguen el mismo patrón que el resto de la portada — se ordenan de más
+// reciente a más antigua por `fecha` y se acumulan en un carrusel (una pieza
+// por bloque). Para publicar una nueva basta con empujarla a este array.
+const piezasInteractivas = [
+    {
+        slug: 'un-clavo',
+        id: 'visor/un-clavo',
+        titulo: 'Un clavo... s.o.c. · visor 3D',
+        imagen: '/images/Un-clavo-soc.webp',
+        autor: 'Rafael Dimitri Guzmán Camacho',
+        autorSlug: 'rafael-dimitri-guzman-camacho',
+        autorImagen: '/images/dimitri_guzman.webp',
+        fecha: '2026-11-07',
+        meta: 'Realidad aumentada · 5,08 MB',
+        resumen:
+            'Escultura del artículo <a href="/un-clavo-soc-ficcion-plastica/">“Un clavo... s.o.c - Ficción plástica”</a> obra del año 1995, en tres dimensiones. Gírala, acércala y —si tu móvil lo permite— colócala a escala real en tu espacio.',
+        cta: { href: '/visor/un-clavo/', texto: 'Abrir el visor →' },
+        search: 'un clavo visor 3d escultura realidad aumentada rafael dimitri guzman camacho arte',
+        category: 'visor 3d|arte',
+        // El artículo que le da bio y avatar a la pieza (misma fuente que el
+        // resto de la portada, para que no haya dos versiones de la ficha).
+        postRelacionado: 'un-clavo-soc-ficcion-plastica',
+    },
+].sort((a, b) => Date.parse(b.fecha) - Date.parse(a.fecha));
+
+const bloquesPiezas = enBloques(piezasInteractivas, 1);
+
+const postDePieza = (pieza: (typeof piezasInteractivas)[number]) =>
+    sortedPosts.find((post) => post.id === pieza.postRelacionado) ?? null;
+const imagenDePieza = (pieza: (typeof piezasInteractivas)[number]) => {
+    const post = postDePieza(pieza);
+    return post ? getAuthorImage(post) : pieza.autorImagen;
+};
+const bioDePieza = (pieza: (typeof piezasInteractivas)[number]) => {
+    const post = postDePieza(pieza);
+    return post ? getAuthorBio(post) : 'Biografía del autor próximamente.';
+};
+
 const pageCount = Math.ceil(sortedPosts.length / HOME_PAGE_SIZE);
 
 // Schema del sitio: va calculado aquí, no en el marcado, porque es donde
@@ -149,7 +189,7 @@ const websiteSchema = {
                 </select>
             </form>
             <p id="blog-search-count" class="blog-search-count" aria-live="polite">
-                {sortedPosts.length} artículo{sortedPosts.length === 1 ? '' : 's'} · página 1 de {pageCount}
+                {sortedPosts.length} elemento{sortedPosts.length === 1 ? '' : 's'} · página 1 de {pageCount}
             </p>
             <div id="global-search-results" class="global-search-results" hidden aria-live="polite"></div>
         </div>
@@ -161,46 +201,6 @@ const websiteSchema = {
                 </div>
             ) : (
                 <>
-                    {/* La pieza interactiva va primera: es la publicación más
-                        reciente (visor 3D, 2026-11-07); después el artículo
-                        reciente y el resto ordenados por fecha. */}
-                    <section class="featured-section visor-section" aria-labelledby="visor-heading">
-                        <div class="featured-header">
-                            <h2 id="visor-heading">Pieza interactiva</h2>
-                            <p>La escultura del ensayo, en tres dimensiones.</p>
-                        </div>
-                        <div class="featured-grid">
-                            <article
-                                class="featured-card latest-card"
-                                data-search="un clavo visor 3d escultura realidad aumentada rafael dimitri guzman camacho arte"
-                                data-author="Rafael Dimitri Guzmán Camacho"
-                                data-category="visor 3d|arte"
-                                data-post-id="visor/un-clavo"
-                            >
-                                <div class="latest-card-header">
-                                    <span class="featured-badge">Visor 3D</span>
-                                    <h3><a href="/visor/un-clavo/">Un clavo... s.o.c. · visor 3D</a></h3>
-                                    <div class="featured-meta">
-                                        <span class="featured-author-line">
-                                            <img class="post-author-avatar" src="/images/dimitri_guzman.webp" alt="Foto de Rafael Dimitri Guzmán Camacho" width="28" height="28" loading="lazy" decoding="async" />
-                                            <span>Por <a href="/autores/rafael-dimitri-guzman-camacho/">Rafael Dimitri Guzmán Camacho</a></span>
-                                        </span>
-                                        <time class="post-date" datetime="2026-11-07T00:00:00.000Z">7 de noviembre de 2026 · Realidad aumentada · 5,08 MB</time>
-                                    </div>
-                                </div>
-                                <div class="latest-card-body">
-                                    <PostMedia title="Un clavo... s.o.c. · visor 3D" image="/images/Un-clavo-soc.webp" variant="latest" />
-                                    <div class="latest-card-content">
-                                        <p>
-                                            Escultura del artículo <a href="/un-clavo-soc-ficcion-plastica/">“Un clavo... s.o.c - Ficción plástica”</a> obra del año 1995, en tres dimensiones. Gírala, acércala y —si tu móvil lo permite— colócala a escala real en tu espacio.
-                                        </p>
-                                        <a href="/visor/un-clavo/" class="read-more">Abrir el visor →</a>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                    </section>
-
                     {latestPost && (
                         <section class="featured-section latest-section" aria-labelledby="latest-heading">
                             <div class="featured-header">
@@ -255,6 +255,79 @@ const websiteSchema = {
                                         </div>
                                     </div>
                                 </article>
+                            </div>
+                        </section>
+                    )}
+
+                    {piezasInteractivas.length > 0 && (
+                        <section class="featured-section visor-section" aria-labelledby="visor-heading">
+                            <div class="featured-header">
+                                <h2 id="visor-heading">Pieza interactiva</h2>
+                                {bloquesPiezas.length > 1 && (
+                                    <>
+                                        <p class="carousel-hint">Desliza o usa las flechas para ver más piezas</p>
+                                        <div class="carousel-nav">
+                                            <button class="carousel-btn prev" type="button" title="Bloque anterior" aria-label="Pieza interactiva: bloque anterior"><span aria-hidden="true">‹</span></button>
+                                            <div class="carousel-dots" aria-label="Pieza interactiva: bloques">
+                                                {bloquesPiezas.map((_, i) => (
+                                                    <button class="carousel-dot" type="button" aria-label={`Pieza interactiva: ir al bloque ${i + 1}`} aria-current={i === 0}></button>
+                                                ))}
+                                            </div>
+                                            <button class="carousel-btn next" type="button" title="Bloque siguiente" aria-label="Pieza interactiva: bloque siguiente"><span aria-hidden="true">›</span></button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                            <div class="carousel" role="region" aria-label="Pieza interactiva, carrusel" tabindex="0">
+                                <div class="carousel-track">
+                                    {bloquesPiezas.map((bloque) => (
+                                        <div class="carousel-slide">
+                                            <div class="featured-grid">
+                                                {bloque.map((pieza) => (
+                                                    <article
+                                                        class="featured-card latest-card"
+                                                        data-search={pieza.search}
+                                                        data-author={pieza.autor}
+                                                        data-category={pieza.category}
+                                                        data-post-id={pieza.id}
+                                                    >
+                                                        <div class="latest-card-header">
+                                                            <span class="featured-badge">Visor 3D</span>
+                                                            <h3><a href={`/${pieza.id}/`}>{pieza.titulo}</a></h3>
+                                                            <div class="featured-meta">
+                                                                <span class="featured-author-line">
+                                                                    <button class="author-trigger" type="button" aria-label={`Ver biografía de ${pieza.autor}`} title={`Abrir biografía de ${pieza.autor}`}>
+                                                                        <img class="post-author-avatar" src={imagenDePieza(pieza)} alt={`Foto de ${pieza.autor}`} width="28" height="28" loading="lazy" decoding="async" />
+                                                                    </button>
+                                                                    <span>Por <a href={`/autores/${pieza.autorSlug}/`}>{pieza.autor}</a></span>
+                                                                    <button class="author-bio-trigger" type="button" data-author-modal={`author-modal-${pieza.slug}`} aria-label={`Ver biografía de ${pieza.autor}`} title={`Abrir biografía de ${pieza.autor}`}>ver bio</button>
+                                                                </span>
+                                                                <time class="post-date" datetime={`${pieza.fecha}T00:00:00.000Z`}>{formatDate(new Date(`${pieza.fecha}T00:00:00.000Z`))} · {pieza.meta}</time>
+                                                            </div>
+                                                        </div>
+                                                        <div class="latest-card-body">
+                                                            <PostMedia title={pieza.titulo} image={pieza.imagen} variant="latest" />
+                                                            <div class="latest-card-content">
+                                                                <p set:html={pieza.resumen} />
+                                                                <a href={pieza.cta.href} class="read-more">{pieza.cta.texto}</a>
+                                                            </div>
+                                                        </div>
+                                                        <div class="author-modal" id={`author-modal-${pieza.slug}`} hidden aria-hidden="true" role="dialog" aria-modal="true">
+                                                            <div class="author-modal-card">
+                                                                <div class="author-modal-heading">
+                                                                    <img class="author-modal-image" src={imagenDePieza(pieza)} alt={`Foto de ${pieza.autor}`} width="72" height="72" loading="lazy" decoding="async" />
+                                                                    <h2>{pieza.autor}</h2>
+                                                                </div>
+                                                                <p>{bioDePieza(pieza)}</p>
+                                                                <button class="author-modal-close" type="button">Cerrar</button>
+                                                            </div>
+                                                        </div>
+                                                    </article>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </section>
                     )}
@@ -505,7 +578,7 @@ const websiteSchema = {
                     if (emptyState) emptyState.hidden = visibles.size !== 0;
                     if (countEl) {
                         if (filtrando) {
-                            const label = visibles.size === 1 ? 'artículo' : 'artículos';
+                            const label = visibles.size === 1 ? 'elemento' : 'elementos';
                             countEl.textContent = `${visibles.size} ${label} coincidentes`;
                         } else {
                             countEl.textContent = countBase;
