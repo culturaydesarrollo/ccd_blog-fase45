@@ -33,11 +33,21 @@ las métricas de página vistas no explican.
 - La API de Web Analytics no funciona con el token actual (404
   `code 10001`, falta permiso `Web Analytics: Edit`): todo por panel.
 
-### Clarity (proyecto `3j9kkblzoj`)
+### Clarity (proyecto `za9f4el211`; la etiqueta `3j9kkblzoj` fue errónea)
 
 - Snippet **oficial sin modificar** en `src/layouts/Layout.astro`
   (`is:inline`, afecta a todas las páginas) — commit `98c103d`.
 - Elegido el sector "Ciencia, ciencias sociales y otros".
+
+> **Corrección 2026-11-10**: la etiqueta usada en su momento (`3j9kkblzoj`)
+> pertenecía a **otro proyecto que no está en la cuenta** (config de test,
+> `track:false`, originado en el portal antiguo `app.clarity.ms`, hoy
+> retirado — NXDOMAIN en el DNS autoritativo). El proyecto real *Blog Cultura
+> y Desarrollo* usa como tag el propio ID **`za9f4el211`**. El blog se
+> corrigió en `6eddeea`: **sin este cambio Clarity nunca recibió datos del
+> sitio** (el proyecto quedaba eternamente en "¡Casi terminamos!"). La CSP no
+> necesitó cambios: `*.clarity.ms` ya cubre `h.clarity.ms` (el nuevo
+> endpoint de recolección).
 
 ### CSP: ampliación obligatoria (sin ella Clarity falla en silencio)
 
