@@ -11,7 +11,7 @@ const apiBase = (import.meta.env.PUBLIC_API_URL || '').replace(/\/+$/, '');
 const formAction = apiBase ? `${apiBase}/api/contact` : `https://formspree.io/f/${formspreeId}`;
 ---
 
-<dialog class="contact-dialog" id="contacto" aria-labelledby="contact-title">
+<dialog class="contact-dialog" id="contacto" aria-labelledby="contact-title" closedby="any">
   <h2 id="contact-title">{isGeneralContact ? 'Ponte en contacto con nosotros' : 'Escríbenos sobre este artículo'}</h2>
   <p class="contact-intro">Envíanos tus comentarios, preguntas o propuestas relacionadas con este contenido.</p>
 

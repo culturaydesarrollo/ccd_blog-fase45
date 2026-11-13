@@ -472,6 +472,9 @@ const entrarHref = `${panelBase}/login`;
         const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
         root.dataset.theme = next;
         localStorage.setItem('ccd-theme', next);
+        document
+          .querySelector('meta[name="color-scheme"]')
+          ?.setAttribute('content', next);
         syncThemeButton();
         closeMenu();
       });

@@ -35,7 +35,7 @@ const endpoint = apiBase ? `${apiBase}/api/subscribe` : '';
 )}
 
 {apiBase && (
-  <dialog class="subscribe-dialog" id="suscribete" aria-labelledby="subscribe-dialog-title">
+  <dialog class="subscribe-dialog" id="suscribete" aria-labelledby="subscribe-dialog-title" closedby="any">
     <h2 id="subscribe-dialog-title">Suscríbete al boletín</h2>
     <p class="subscribe-intro">Recibe los nuevos artículos del blog directamente en tu correo.</p>
     <form class="subscribe-form" action={endpoint} method="POST" data-endpoint={endpoint} novalidate>

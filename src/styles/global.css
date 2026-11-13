@@ -19,6 +19,9 @@
 }
 
 :root {
+  /* La UI nativa (scrollbars, campos, select) sigue el tema del sitio, no el SO */
+  color-scheme: light;
+
   /* Paleta coordinada con el marrón del logo institucional */
   --color-primary: #24130f;
   --color-secondary: #9a5f3f;
@@ -38,6 +41,8 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
+
   --color-primary: #f1c8ae;
   --color-secondary: #e7a27b;
   --color-text: #f3e9e3;

@@ -25,6 +25,14 @@ const { title, description, type = 'website', author, publishedDate, image, imag
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<!--
+		  color-scheme: la UI nativa (scrollbars, campos, select) sigue el tema
+		  del sitio, no el del SO. El valor por defecto es "light" (tema claro
+		  sin personalizar); el script is:inline de abajo lo sincroniza con
+		  localStorage antes del pintado. En CSS manda :root{color-scheme} de
+		  global.css, que refleja data-theme.
+		-->
+		<meta name="color-scheme" content="light" />
 		<title>{title}</title>
 		<SeoHead
 			title={title}
@@ -71,6 +79,8 @@ const { title, description, type = 'website', author, publishedDate, image, imag
 					if (tema === 'dark' || tema === 'light') raiz.dataset.theme = tema;
 					if (tamano === 'larger' || tamano === 'smaller') raiz.dataset.textSize = tamano;
 					else delete raiz.dataset.textSize;
+					var meta = document.querySelector('meta[name="color-scheme"]');
+					if (meta) meta.setAttribute('content', raiz.dataset.theme === 'dark' ? 'dark' : 'light');
 				};
 				document.addEventListener('astro:after-swap', aplicar);
 				aplicar();
