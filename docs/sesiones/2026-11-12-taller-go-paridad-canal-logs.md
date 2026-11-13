@@ -111,3 +111,42 @@ va junto al ejecutable.
   en Oracle (el plan Go de la API TS sigue congelado: **no se reescribe**).
 - El envío real SMTP+age quedó probado hasta la cola: falta un
   `config-smtp.json` con credenciales reales para el primer lote de verdad.
+
+## Fix: la vista previa no cargaba los medios insertados
+
+**Qué se hizo** — Las figuras insertadas salían rotas en `👁 Vista previa`:
+el iframe `srcdoc` hereda la base URL del taller, así que
+`<img src="/images/…">` pedía a `127.0.0.1:4322/images/…` y caía en el
+catch-all 404. **Causa raíz: ningún servidor servía `/images/*` ni `/video/*`
+— ni el `server.cjs` original ni el puerto Go.** Era una laguna preexistente
+del JS portada fielmente al Go, no una regresión.
+
+### Fix (solo Go; el JS queda intocable como referencia)
+
+- `handlers.go`: rutas `GET /images/{name...}` y `GET /video/{name...}` →
+  `hMedia(dir)`.
+- `hMedia`: tabla MIME fija `mediaMIME` (`.svg` no siempre está en la tabla
+  del sistema), anti path-traversal con `dentroDe` (`filepath.Rel` debe
+  quedar dentro de `public/<dir>`), `os.Stat` + `IsDir` → 404 JSON
+  `no existe …`, `http.ServeFile` con Content-Type explícito. El catch-all
+  de `ruta desconocida` sigue intacto para todo lo demás.
+
+**Divergencia deliberada** (aceptada): Go sirve `/images` y `/video` y el JS
+no — la paridad no testea esas rutas.
+
+### Verificación
+
+- **Test de regresión** `media_test.go` (3 tests): 200 + `image/png` con
+  bytes idénticos y subcarpeta → 200 `image/jpeg`; 404 en inexistente y en
+  `/video/` sin dir; 3 travesías con `..%2f` codificado → 404 sin filtrar el
+  marcador `CONTENIDO-PRIVADO-NO-FILTRAR`.
+- **Gate completo en verde** (`gofmt`/`vet`/`test`/`build` → exit 0); exe
+  reiniciado en 4322 con `-log`.
+- **curl:** `/images/Paranoia.jpg` → `200 image/jpeg`; travesía → 404;
+  inexistente → 404 JSON; `/api/rara` → 404 (catch-all sigue).
+- **Navegador:** `Image('/images/Paranoia.jpg')` → 1250×800; el `srcdoc`
+  del preview carga la figura; consola sin errores.
+
+Aprendizaje registrado en gstack: `taller-sin-ruta-de-medios` (pitfall,
+9/10) — comprobar siempre que el servidor sirve los medios que la UI
+inserta, aunque el JS de referencia tampoco lo haga.
