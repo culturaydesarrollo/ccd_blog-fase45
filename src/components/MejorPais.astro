@@ -1,0 +1,47 @@
+---
+// Copia funcional de la sección «¡Mayor compromiso, mejor país!» que vivía en
+// /acerca/ (retirada de esa página el 2026-11-13, decisión editorial de
+// simplificar «Acerca de»). Esta pieza queda guardada como recurso alterno y
+// NO está importada en ninguna página.
+//
+// Para restaurarla en /acerca/:
+//   import MejorPais from '../components/MejorPais.astro';
+//   …
+//   <MejorPais />
+//
+// Los estilos van dentro del componente para que funcione en solitario: los
+// <style> con scope de la página no aplican a la plantilla de un hijo.
+import FourierMap from './FourierMap.astro';
+---
+
+<section class="about-section">
+  <h2>¡Mayor compromiso, mejor país!</h2>
+  <p>
+    Esta pieza nació de una metáfora que nos describe. Toda curva
+    cerrada puede reconstruirse con una suma de círculos que giran —una
+    serie de Fourier—, término a término. Con un solo término la forma
+    se queda en un óvalo: la intención, por sí sola, no dibuja un país.
+  </p>
+  <p>
+    Cada círculo nuevo corrige el trazo un poco, y al final la suma se
+    vuelve casi exacta. Creemos que el territorio funciona igual: cada
+    compromiso —una lectura, una gestión, una conversación, una
+    alianza— corrige el contorno de lo que podemos ser. Ninguno basta
+    solo. Juntos, el país deja de ser aproximación.
+  </p>
+  <FourierMap />
+</section>
+
+<style>
+  .about-section {
+    margin-bottom: 2.25rem;
+  }
+
+  .about-section h2 {
+    margin-bottom: 0.75rem;
+  }
+
+  .about-section p {
+    line-height: 1.75;
+  }
+</style>
