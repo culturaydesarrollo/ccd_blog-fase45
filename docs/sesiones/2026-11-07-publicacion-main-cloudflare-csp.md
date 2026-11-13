@@ -1,6 +1,6 @@
 # Publicación en main, rama de Cloudflare Pages y CSP del visor
 
-**Estado:** cerrado · **Inicio:** 2026-11-07 · **Última:** 2026-11-07
+**Estado:** cerrado · **Inicio:** 2026-11-07 · **Última:** 2026-11-12
 
 ## 2026-11-07 — Analítica gratuita: Cloudflare Web Analytics + Microsoft Clarity
 
@@ -203,3 +203,111 @@ fallback si el entorno la rechaza) · teclado (flechas giran, `0` centra,
   pantalla completa) no son testeables en headless: stubbear la entrada y
   ejercitar las ramas del código, en vez de aflojar la aserción.
 - `npm run validate` + `npm run test` en verde antes de cada push.
+
+## 2026-11-12 — Análisis de métricas (zona + WA + Clarity) e investigación del beacon
+
+**Qué se hizo** — Analizar juntas las métricas de producción (Cloudflare
+zona, Web Analytics y Microsoft Clarity) y resolver la discrepancia de
+conteo entre la zona (336 visitas/24 h) y el beacon (5 visitas/24 h).
+
+### Datos capturados (2026-11-12; cifras redondeadas del panel)
+
+**Zona `culturaydesarrollo.org`, 24 h** — 4,26k solicitudes (↗279,4 %),
+52,91 MB (↗157,6 %), **354 pageviews / 336 visitas** (↗39/46 %), cache
+hit 19,04 %, 5xx 0,12 %. Desglose: hosts blog 271 · apex 75 · panel 8;
+top UA **AhrefsBot 212**, meta-webindexer 14, SemrushBot 4; rutas `/` 95
+y páginas internas con 5-6 hits uniformes (firma de rastreo).
+
+**Web Analytics (beacon, `excludeBots=Yes`), 24 h** — 5 visitas / 6
+pageviews: Colombia 100 %, referentes directo 4 · `culturaydesarrollo.org`
+1, rutas `/` 4 · `/visor/un-clavo/` 1, Safari 2 / Firefox 1 / Chrome 2,
+Desktop 4 / Mobile 1.
+
+- **Core Web Vitals 24 h:** LCP P75 **916 ms** (P50 803 / P90 2652; 75 %
+  buena, 25 % mejorable) con TTFB 1155 ms = 59 % del LCP; **INP** con un
+  elemento a **1440 ms** (`div.blog-container.visor-page > header… >
+  span.meta-author`; retardo de entrada 1361 ms = 94 %, procesamiento 7
+  ms) y 33 % mala; CLS 100 % buena; carga total 1073 ms.
+
+**Clarity (`za9f4el211`), últimos 3 días — 4 grabaciones:** 2 en
+`/visor/un-clavo/` (ChromeMobile 00:38/4 clics; SamsungInternet 00:25/2
+clics), 2 en `/pagina/2/` (Safari PC 03:10 y 29:58, 0 clics); todas
+Colombia, dos con referente `culturaydesarrollo.org`.
+
+### Hallazgo: la instalación del beacon está bien
+
+- Navegador real en producción: `performance` contiene
+  `static.cloudflareinsights.com/beacon.min.js/vce701823…` **y**
+  `POST /cdn-cgi/rum?`; Clarity también carga. La CSP no lo bloquea.
+- El sitio WA (setup automático `15de5db4…`) cubre la zona entera: su
+  desglose de hosts a 30 días (blog 360 + apex 50 = 410) confirma que
+  `blog.*` reporta. Sin sitio huérfano ni doble conteo.
+- **WA a 30 días: 410 visitas / 590 pageviews** (≈14/día) — beacon sano.
+  (El 07-11 midió 49 visitas/24 h: siempre ha contado bien.)
+
+### De dónde vienen esas 410 visitas (WA, 30 días)
+
+- **Referente:** directo **330 (80 %)** · `localhost` **30** (pruebas
+  locales hacia el sitio en vivo, no audiencia) · `m.facebook.com` 20 ·
+  auto (`blog.*`) 10 · `www.google.com` 10.
+- **País:** Colombia 340 (83 %) · Estados Unidos 60 · China 10 (menor).
+- **Host:** `blog.*` 360 · apex `culturaydesarrollo.org` 50 (el beacon
+  del portal institucional reporta al mismo sitio WA).
+- **Dispositivo:** Desktop 240 / Mobile 170; SO Windows 190, Android 140,
+  iOS 30, macOS 20; navegadores ChromeMobile 100, ChromeDerivative 100,
+  Chrome 70, Firefox 60, MobileSafari 30.
+- **Rutas:** `/` 200 · `/visor/un-clavo/` 80 · `/vivir-mas-vivir-distinto/`
+  30 · `/un-clavo-soc-ficcion-plastica/` 20 · `/mito-del-sereno/` 20.
+- **Lectura:** tráfico mayormente directo (WhatsApp/correo/marcadores),
+  Google apenas 10 visitas (SEO orgánico aún sin efecto), Facebook el
+  mejor referente externo, reparto desktop/móvil equilibrado.
+
+### Por qué no cuadra: la zona mide HTTP, el beacon mide humanos
+
+- **Zona 30 días: 21,99k pageviews / 19,12k visitas** (blog 14,31k ·
+  panel 5,27k · apex 2,36k) vs beacon **590 / 410** → 37-47×.
+- **La zona está dominada por bots:** AhrefsBot 212 (≈60 % de los
+  pageviews del día), ChatGLM-Spider 930 y ClaudeBot 630 a 30 días, y
+  rutas de scanner: **`/supabase/config.toml` 800 hits**, `/robots.txt`
+  240, `/sitemap.xml` 230 en un blog estático. Firma bot: **1,15
+  página/visita** en la zona (los humanos leen varias páginas).
+- **Cuadre del día:** 354 pageviews de zona − ≈230 bots − ≈83
+  panel/apex − fetch de SPA y ad-blockers ≈ 6 del beacon.
+- **Diferencias estructurales (no bugs):** (1) la zona cuenta cada fetch
+  HTML, el beacon solo cargas de documento completo — con el ClientRouter
+  de Astro, hojear 10 artículos = 10 pageviews de zona y 1 de beacon;
+  (2) el panel de WA aplica `excludeBots=Yes` y la zona no; (3)
+  EasyPrivacy bloquea `static.cloudflareinsights.com` (ad-blockers =
+  lectores reales que no reportan).
+
+### Conclusión y criterio de uso
+
+**Nada que arreglar en la instalación** (beacon, CSP, ámbito y Clarity
+OK). Los dos números nunca cuadrarán; cada métrica para lo que mide:
+
+| Pregunta | Métrica |
+|---|---|
+| Cuánta gente lee el blog | Web Analytics (beacon) |
+| Rastreo SEO y carga de origen | Zona |
+| Caché / 5xx / transferencia | Zona |
+| Cómo se usa el visor | Clarity |
+
+### Pendiente
+
+- **INP del visor:** el retardo de entrada (1440 ms) en `span.meta-author`
+  de la cabecera apunta a la escena WebGL bloqueando el hilo principal en
+  la primera interacción — diferir la carga de la escena.
+- **Cache hit 19 %:** revisar cabeceras de caché de los assets en Pages.
+- Opcional: limitar AhrefsBot con regla WAF para limpiar la zona (sin
+  bloquearlo del todo si interesa el rastreo SEO).
+
+### Lecciones
+
+- Zona y Web Analytics no cuentan lo mismo: una mide peticiones HTTP
+  (mayormente bots), la otra páginas cargadas por humanos con JS. La
+  brecha de 47× es esperada; el error sería "arreglar" el beacon para
+  igualar la zona.
+- Rutas raras en un sitio estático (`/supabase/config.toml`, 800 hits)
+  son scanners: no confundir picos de zona con picos de audiencia.
+- La verificación fiable del beacon sigue siendo `performance` en un
+  navegador real (script + `POST /cdn-cgi/rum`), no `curl`.
