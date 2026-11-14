@@ -129,11 +129,11 @@ const categorias = articulo?.data.category ?? [];
     </section>
 
     <div class="barra" role="toolbar" aria-label="Controles del visor">
-      <button class="boton" id="btnRotar" type="button" aria-pressed="true">Auto-rotación</button>
-      <button class="boton" id="btnCentrar" type="button">Centrar</button>
+      <button class="boton" id="btnRotar" type="button" aria-pressed="true" disabled>Auto-rotación</button>
+      <button class="boton" id="btnCentrar" type="button" disabled>Centrar</button>
       <div class="zoom" role="group" aria-label="Zoom">
-        <button class="boton boton--cuadrado" id="btnAlejar" type="button" aria-label="Alejar">−</button>
-        <button class="boton boton--cuadrado" id="btnAcercar" type="button" aria-label="Acercar">+</button>
+        <button class="boton boton--cuadrado" id="btnAlejar" type="button" aria-label="Alejar" disabled>−</button>
+        <button class="boton boton--cuadrado" id="btnAcercar" type="button" aria-label="Acercar" disabled>+</button>
       </div>
       <button class="boton boton--accion" id="btnAR" type="button" disabled>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 3.6 7.2v9.6L12 21.2l8.4-4.4V7.2L12 2.8Z"/><path d="M3.6 7.2 12 11.6l8.4-4.4M12 11.6v9.6"/></svg>
@@ -171,8 +171,6 @@ const categorias = articulo?.data.category ?? [];
   </div>
 
   <div class="aviso" id="aviso" role="status" aria-live="polite"></div>
-
-  <script is:inline type="module" src="/vendor/model-viewer.min.js"></script>
 </Layout>
 
 <style>
@@ -668,6 +666,39 @@ const categorias = articulo?.data.category ?? [];
 </style>
 
 <script>
+  // ---- carga diferida de WebGL ----
+  // El primer pintado no necesita la librería (1 MB) ni el modelo (5 MB):
+  // traerlos en el arranque compite con el render y encarece el INP
+  // (Clarity marcaba 1,1 s «pobre» en este visor). El script se inyecta
+  // tras `load` en el primer periodo libre del hilo; el modelo arranca
+  // solo al definirse el elemento.
+  function inyectarModelViewer() {
+    if (customElements.get('model-viewer')) return;
+    if (document.querySelector('script[src="/vendor/model-viewer.min.js"]')) return;
+    const guion = document.createElement('script');
+    guion.type = 'module';
+    guion.src = '/vendor/model-viewer.min.js';
+    document.head.appendChild(guion);
+  }
+
+  function programarCarga() {
+    if ('requestIdleCallback' in window) {
+      // al primer idle tras el pintado; tope 2 s si el hilo sigue ocupado
+      window.requestIdleCallback(inyectarModelViewer, { timeout: 2000 });
+    } else {
+      window.setTimeout(inyectarModelViewer, 0);
+    }
+  }
+
+  // El disparo se ancla a `load` (red, no render): el primer pintado y los
+  // recursos críticos van primero, la librería WebGL después. Un
+  // IntersectionObserver se descartó porque la vitrina siempre está a la
+  // vista y el observador no dispara en pestañas sin frames (medido).
+  if (document.readyState === 'complete') programarCarga();
+  else window.addEventListener('load', programarCarga, { once: true });
+  // Red de seguridad: el visor se carga pase lo que pase con lo anterior.
+  window.setTimeout(inyectarModelViewer, 4000);
+
   const mv = document.getElementById('mv') as HTMLElement & {
     autoRotate: boolean;
     cameraOrbit: string;
@@ -732,6 +763,12 @@ const categorias = articulo?.data.category ?? [];
   function alCargar() {
     if (completado) return;
     completado = true;
+    // Controles que tocan la cámara: hasta aquí el elemento ni siquiera
+    // estaba definido (carga diferida) y sus manejadores fallarían.
+    btnRotar.disabled = false;
+    btnCentrar.disabled = false;
+    btnAcercar.disabled = false;
+    btnAlejar.disabled = false;
     progreso.dataset.visible = 'false';
     ponerEstado('Modelo cargado', 'ok');
     try {
@@ -799,12 +836,16 @@ const categorias = articulo?.data.category ?? [];
 
   // ---- auto-rotación ----
   function fijarRotacion(activa: boolean) {
-    mv.autoRotate = activa;
+    // Se escribe el atributo, no la propiedad: con la carga diferida este
+    // código puede correr antes de model-viewer defina el elemento, y un
+    // valor en la propiedad sería un expando que tapa su accessor.
+    if (activa) mv.setAttribute('auto-rotate', '');
+    else mv.removeAttribute('auto-rotate');
     btnRotar.setAttribute('aria-pressed', String(activa));
   }
 
   btnRotar.addEventListener('click', () => {
-    fijarRotacion(!mv.autoRotate);
+    fijarRotacion(!mv.hasAttribute('auto-rotate'));
   });
 
   if (menosMovimiento) fijarRotacion(false);
@@ -908,6 +949,7 @@ const categorias = articulo?.data.category ?? [];
 
   // ---- teclado ----
   vitrina.addEventListener('keydown', (event) => {
+    if (!completado) return; // carga diferida: sin modelo no hay cámara
     const o = mv.getCameraOrbit();
     const paso = 0.12;
     let usado = true;
