@@ -311,3 +311,104 @@ OK). Los dos números nunca cuadrarán; cada métrica para lo que mide:
   son scanners: no confundir picos de zona con picos de audiencia.
 - La verificación fiable del beacon sigue siendo `performance` en un
   navegador real (script + `POST /cdn-cgi/rum`), no `curl`.
+
+## 2026-11-13 — Corte de métricas y carga diferida de la escena WebGL
+
+**Qué se hizo** — Corte de métricas de las 3 fuentes (zona + WA +
+Clarity) y diferir la carga de la escena WebGL del visor para atacar el
+INP «pobre» (1,1 s) que Clarity marca en `/visor/un-clavo/`, cerrando el
+pendiente del 12 nov.
+
+### Datos capturados (2026-11-13; cifras redondeadas del panel)
+
+**Zona, 24 h** — 2,4k solicitudes (↘45,9 %), **318 pageviews / 290
+visitas**, 50,08 MB, **cache hit 7,26 % (↘59,7 % desde 19,04 %)**, 5xx
+0,13 %. La baja de solicitudes coincide con menos rastreo (el 12 nov
+dominaban AhrefsBot/Semrush).
+
+**WA (beacon, `excludeBots=Yes`)** — 24 h: 9 pvs / 6 visitas · **30 d:
+410 visitas / 590 pvs**, carga media 849 ms (idéntico al corte del 12
+nov). Core Web Vitals 24 h: LCP P75 **933 ms**, INP P75 **62 ms**, CLS 0
+— todo «Buena» 100 %.
+
+**Clarity, 7 d** — 6 sesiones (38 excluidas como bot), 3 usuarios
+únicos, 1,67 pág/sesión, scroll 89,9 %, **clics fallidos 50 %** (único
+punto rojo de comportamiento). Rendimiento 77/100: LCP 2,4 s bueno,
+CLS 0 bueno, **INP 1,1 s «pobre»** — confirma el pendiente del visor.
+Páginas: `/pagina/2/` 3 · `/` 2 · `/acerca/` 2 · `/visor/un-clavo/` 2.
+
+**Brecha zona vs beacon** — 290 visitas (zona) vs 6 (beacon) ≈ **48×**,
+igual que el 12 nov: la zona cuenta HTTP/bots, el beacon humanos. Sin
+cambios en la conclusión ni en el criterio de uso de cada métrica.
+
+### Carga diferida de la escena WebGL
+
+Protocolo de medición: build real vía `astro preview` en
+`localhost:4322`, trazo de 3 s desde la navegación (la ventana en la que
+un visitante puede hacer el primer clic), mismo protocolo antes y
+después.
+
+**Línea base (carga eager)** — `model-viewer.min.js` (1045 KB) 42→101
+ms, `unclavo_soc.glb` (4966 KB) 171→237 ms, `#estado`=ok a **635 ms**;
+trazo: 1 long task, blocking 0,22 ms, RunTask máx 50,2 ms, 3002
+eventos. El arranque del script a los 42 ms competía directamente con el
+primer pintado.
+
+**Cambio** — el `<script>` estático de model-viewer desaparece; el script
+de la página lo inyecta tras `load` en el primer periodo libre del hilo
+(`requestIdleCallback`, tope 2 s) con red de seguridad a los 4 s. El
+modelo arranca solo al definirse el elemento. Ajustes que la diferida
+obliga:
+
+- los botones de cámara (auto-rotar, centrar, zoom) arrancan `disabled`
+  y se habilitan en `alCargar()`: antes de que el elemento existiera sus
+  manejadores fallaban (o creaban expandos);
+- `fijarRotacion()` escribe el atributo `auto-rotate`, no la propiedad:
+  un valor en la propiedad antes de definir el elemento sería un expando
+  que tapa el accessor de Lit **para siempre** (el botón dejaría de
+  funcionar);
+- el teclado se ignora hasta que el modelo cargó (`if (!completado)`).
+
+**Resultado (tras el cambio)** — script **365→377 ms** (arranque +323 ms,
+ya fuera de la carga crítica), glb 420→472 ms, `#estado`=ok a **931 ms**
+(+296 ms: el modelo aparece un poco más tarde, a cambio el primer
+pintado no compite con 1 MB de JS). Trazos: 0-3 long tasks, blocking
+0-24 ms, RunTask máx 47,9-61,6 ms — la varianza local es alta (dos
+corridas, una mejor que la línea base y otra peor en blocking): sin
+regresión clara en local; la señal real es el INP de Clarity a 7-10 días.
+
+**Descartado midiendo, no intuyendo** — la primera versión disparaba la
+carga con `IntersectionObserver` sobre la vitrina; en este entorno la
+pestaña no genera frames y el observador **nunca** evaluó la intersección
+(comprobado con un experimento en vivo: IO sin disparar y
+`requestIdleCallback` llegando solo por su timeout) → el visor tardó
+4,1 s, hasta la red de seguridad. Se cambió el gate a `load` + idle, que
+depende de red y no de render.
+
+### Gate y verificación
+
+- `npm run validate` (typecheck + build, 135 págs) y **16/16 tests** en
+  verde — dos corridas (tras cada versión del gate).
+- CSP intacta: no se añade ningún script inline; el inyectado es externo
+  same-origin (`/vendor/model-viewer.min.js`), ya permitido en
+  `script-src`. Verificar en producción tras el push: consola sin
+  violaciones de CSP y el visor cargando.
+
+### Pendiente
+
+- **Cache hit bajó de 19 % a 7,3 %** — revisar `Cache Rules`/TTL del
+  origen (el hallazgo del 12 nov, ahora peor).
+- Revisar Clarity en 7-10 días: ¿mejora el INP de 1,1 s del visor?
+- Verificación en vivo tras el deploy (consola + carga del visor).
+
+### Lecciones
+
+- Medir antes/después con el mismo protocolo: lo que cambia de verdad es
+  qué recursos compiten con el primer pintado (el arranque del script lo
+  dice); las métricas de tareas en local son ruidosas con pocas corridas.
+- Un gate de carga que dependa de frames (`IntersectionObserver`) o de
+  ociosidad no sirve como única red en pestañas sin render: `load` +
+  timeout no depende del render y siempre descarga.
+- Diferir la definición de un custom element obliga a revisar todo lo
+  que escriba en sus propiedades antes de definirse: los expandos tapan
+  los accessors de Lit y rompen el control en silencio.
